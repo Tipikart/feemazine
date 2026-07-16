@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titre %}Importer — Fée Mazine{% endblock %}
+{% block contenu %}
+
+<h2>Importer un fichier Excel</h2>
+
+<div class="avertissement">
+    <p>Cette action <strong>remplace entièrement</strong> les passages actuellement
+    enregistrés par le contenu du fichier importé. Une copie de sauvegarde du
+    fichier actuel est automatiquement conservée dans <code>data/backups/</code>
+    avant le remplacement.</p>
+    <p>Le fichier doit contenir une feuille "Passages" avec exactement les colonnes :
+    Date, Heure, Adultes, Enfants, Nouvelle famille.</p>
+</div>
+
+<form
+    method="post"
+    action="/importer"
+    enctype="multipart/form-data"
+    class="formulaire-import"
+    onsubmit="return confirm('Remplacer définitivement les données actuelles par ce fichier ?');"
+>
+    <input type="file" name="fichier" accept=".xlsx" required>
+    <label><input type="checkbox" required> Je confirme vouloir remplacer les données actuelles.</label>
+    <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Importer et remplacer</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,10 @@
+<nav class="sousnav">
+    <a href="/heures/" class="{{ 'actif' if souspage == 'personnel' }}">Mon espace</a>
+    <a href="/heures/equipe" class="{{ 'actif' if souspage == 'equipe' }}">Équipe</a>
+    {% if membre_courant.role == 'admin' %}
+    <a href="/heures/admin" class="{{ 'actif' if souspage == 'admin' }}">Admin</a>
+    {% endif %}
+    <span class="sousnav-espace"></span>
+    <span class="sousnav-utilisateur">{{ membre_courant.nom }}</span>
+    <a href="/heures/deconnexion" class="bouton-tertiaire">Déconnexion</a>
+</nav>

@@ -1,0 +1,35 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Logo Fée Mazine">
+    <!-- Pointe -->
+    <path d="M50,4 L38,26 L62,26 Z" fill="#ec1e79"/>
+    <ellipse cx="50" cy="26" rx="13" ry="5" fill="#ffffff" stroke="#ec1e79" stroke-width="2"/>
+
+    <!-- Petites oreilles -->
+    <path d="M30,30 C24,26 20,28 22,34 C24,38 30,36 30,30 Z" fill="#ec1e79"/>
+    <path d="M70,30 C76,26 80,28 78,34 C76,38 70,36 70,30 Z" fill="#ec1e79"/>
+
+    <!-- Corps -->
+    <path
+        d="M32,28 C24,45 20,70 28,85 C35,97 65,97 72,85 C80,70 76,45 68,28 C68,28 60,34 50,34 C40,34 32,28 32,28 Z"
+        fill="#f2781e" stroke="#ec1e79" stroke-width="3" stroke-linejoin="round"
+    />
+
+    <!-- Guirlande -->
+    <path
+        d="M34,42 Q40,34 46,42 Q52,50 58,42 Q64,34 68,42"
+        fill="none" stroke="#a9cc39" stroke-width="2.5" stroke-linecap="round"
+    />
+
+    <!-- Panneau et spirale -->
+    <path
+        d="M40,58 Q38,58 38,62 L38,80 Q38,88 50,90 Q62,88 62,80 L62,62 Q62,58 60,58 Z"
+        fill="#ffffff" stroke="#ec1e79" stroke-width="2"
+    />
+    <path
+        d="M50,66 C58,66 60,74 54,78 C50,80 44,78 46,72 C47,69 50,68 52,70"
+        fill="none" stroke="#f2781e" stroke-width="2.2" stroke-linecap="round"
+    />
+    <path
+        d="M50,71 C53,71 54,74 51,75"
+        fill="none" stroke="#ec1e79" stroke-width="1.8" stroke-linecap="round"
+    />
+</svg>

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block titre %}Heures d'activite — Fee Mazine{% endblock %}
+{% block contenu %}
+
+<nav class="sousnav">
+    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthese</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Heures</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Accueillants</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Fiche structure</a>
+</nav>
+
+<h2>Saisir une heure d'activite</h2>
+
+{% if accueillants %}
+<form method="post" action="/bilan/heures" class="formulaire-bilan">
+    <div class="champs-en-ligne">
+        <label>Accueillant
+            <select name="accueillant_id" required>
+                {% for a in accueillants %}
+                <option value="{{ a.id }}">{{ a.nom }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>Date
+            <input type="date" name="date_activite" required>
+        </label>
+
+        <label>Type d'activite
+            <select name="type_activite" required>
+                {% for code, libelle in types_heures.items() %}
+                <option value="{{ code }}">{{ libelle }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>Duree
+            <div class="champs-duree">
+                <input type="number" name="duree_h" min="0" value="0" style="width:65px"> h
+                <input type="number" name="duree_m" min="0" max="59" value="0" style="width:65px"> min
+            </div>
+        </label>
+
+        <button type="submit" class="bouton-primaire" style="align-self:end;">Enregistrer</button>
+    </div>
+</form>
+{% else %}
+<p class="texte-secondaire">
+    Aucun accueillant actif. <a href="/bilan/membres">Ajouter un accueillant</a> avant de saisir des heures.
+</p>
+{% endif %}
+
+<h2>Heures enregistrees — {{ noms_mois[mois] }} {{ annee }}</h2>
+
+<div class="filtres-periode">
+    {% for m in range(1, 13) %}
+    <a href="/bilan/heures?annee={{ annee }}&mois={{ m }}"
+       class="{{ 'actif' if m == mois }}">{{ noms_mois[m][:3] }}</a>
+    {% endfor %}
+</div>
+
+<div class="filtres-periode" style="margin-bottom:20px">
+    <a href="/bilan/heures?annee={{ annee - 1 }}&mois={{ mois }}" class="bouton-tertiaire">&larr; {{ annee - 1 }}</a>
+    <a href="/bilan/heures?annee={{ annee + 1 }}&mois={{ mois }}" class="bouton-tertiaire">{{ annee + 1 }} &rarr;</a>
+</div>
+
+{% if heures %}
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Accueillant</th>
+            <th>Type</th>
+            <th>Duree</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in heures %}
+        <tr>
+            <td>{{ h.date.strftime("%d/%m/%Y") }}</td>
+            <td>{{ h.accueillant.nom }}</td>
+            <td>{{ types_heures.get(h.type, h.type) }}</td>
+            <td>{{ fmt(h.duree_minutes) }}</td>
+            <td>
+                <form method="post" action="/bilan/heures/supprimer/{{ h.id }}" class="action-inline">
+                    <button type="submit" class="bouton-tertiaire"
+                            onclick="return confirm('Supprimer cette heure ?')">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="texte-secondaire">Aucune heure enregistree pour {{ noms_mois[mois] }} {{ annee }}.</p>
+{% endif %}
+
+{% endblock %}

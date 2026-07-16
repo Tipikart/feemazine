@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titre %}Modifier une carte — Fee Mazine{% endblock %}
+{% block contenu %}
+
+<h2>Modifier une fiche carte</h2>
+
+<p class="texte-secondaire">
+    Saisissez le code de la carte a modifier pour mettre a jour la composition familiale.
+</p>
+
+<form method="post" action="/cartes/chercher" style="max-width: 400px;">
+    <label>Code de la carte
+        <input type="text" name="code" placeholder="XXXX-XXXX-XXXX" required autofocus
+               style="text-transform: uppercase; letter-spacing: 0.1em; font-family: ui-monospace, monospace;">
+    </label>
+    <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Rechercher</button>
+</form>
+
+<p class="note" style="margin-top: 16px;">
+    <a href="/cartes/" class="bouton-tertiaire">Retour a la gestion des cartes</a>
+</p>
+
+{% endblock %}

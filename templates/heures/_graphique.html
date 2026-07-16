@@ -1,0 +1,14 @@
+<div class="graphique-conteneur">
+    <div class="graphique-barres">
+        {% for point in graphique %}
+        <div class="barre" style="height: {{ point.hauteur_pct }}%;" title="{{ point.libelle }} — {{ point.heures }} h">
+            {% if point.heures > 0 %}<span class="barre-valeur">{{ point.heures }}</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="graphique-etiquettes">
+        {% for point in graphique %}
+        <span>{{ point.libelle }}</span>
+        {% endfor %}
+    </div>
+</div>

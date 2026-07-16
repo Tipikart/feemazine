@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titre %}Carte attribuee — Fee Mazine{% endblock %}
+{% block contenu %}
+
+<h2>Carte attribuee avec succes</h2>
+
+<div class="carte-resultat">
+    <p class="note">Imprimez ou notez ce code pour la famille. Il ne sera plus affiche par la suite.</p>
+    <div class="code-carte">{{ carte.id }}</div>
+    <div class="carte-resume">
+        <p><strong>{{ carte.nb_adultes }}</strong> adulte{{ "s" if carte.nb_adultes > 1 else "" }}</p>
+        <p><strong>{{ carte.enfants | length }}</strong> enfant{{ "s" if carte.enfants | length > 1 else "" }}</p>
+        {% for enfant in carte.enfants %}
+        <span class="etiquette-statut">
+            {% if enfant.date_naissance %}
+                Ne{{ "e" if loop.index % 2 == 0 else "" }} le {{ enfant.date_naissance.strftime("%d/%m/%Y") }}
+            {% else %}
+                Tranche {{ enfant.tranche_declaree }}
+            {% endif %}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="actions-fichier" style="margin-top: 20px;">
+    <button type="button" class="bouton-primaire" onclick="window.print()">Imprimer</button>
+    <a href="/cartes/attribuer" class="bouton-secondaire">Attribuer une autre carte</a>
+    <a href="/" class="bouton-secondaire">Retour au pointage</a>
+</div>
+
+{% endblock %}

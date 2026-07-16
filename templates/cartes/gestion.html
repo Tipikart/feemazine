@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titre %}Cartes pseudonymes — Fee Mazine{% endblock %}
+{% block contenu %}
+
+<h2>Cartes pseudonymes</h2>
+
+<p class="texte-secondaire">
+    Les cartes permettent un comptage certifie de familles distinctes sans collecter de donnee d'identite.
+    Chaque carte porte un code pseudonyme unique. L'attribution d'une carte reste strictement optionnelle.
+</p>
+
+<section class="resume-rapide">
+    <div class="carte"><span class="valeur">{{ nb_actives }}</span><span class="etiquette">Cartes actives</span></div>
+    <div class="carte"><span class="valeur">{{ nb_inactives }}</span><span class="etiquette">Cartes desactivees</span></div>
+</section>
+
+<section class="actions-fichier" style="margin-bottom: 24px;">
+    <a href="/cartes/attribuer" class="bouton-primaire">Attribuer une nouvelle carte</a>
+    <a href="/cartes/modifier" class="bouton-secondaire">Modifier une fiche carte</a>
+</section>
+
+<h2>Parametres</h2>
+
+<form method="post" action="/cartes/parametres" class="formulaire-horaire">
+    <label>Purge automatique apres (mois sans passage)
+        <input type="number" name="duree_purge" value="{{ duree_purge }}" min="1" required style="width: 80px;">
+    </label>
+    <button type="submit" class="bouton-secondaire">Enregistrer</button>
+</form>
+
+<p class="note">
+    Les cartes sans passage depuis plus de {{ duree_purge }} mois sont automatiquement desactivees
+    au demarrage du serveur. Les enfants associes sont supprimes, mais les passages deja
+    enregistres sont conserves (ils ne contiennent que des compteurs historiques).
+</p>
+
+{% endblock %}

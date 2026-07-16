@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block titre %}Mon espace — Heures{% endblock %}
+{% block contenu %}
+
+{% include "heures/_sousnav.html" %}
+
+<h2>Déclarer un horaire</h2>
+<form method="post" action="/heures/declarer" class="formulaire-horaire">
+    <label>Date
+        <input type="date" name="date_saisie" value="{{ aujourdhui }}" max="{{ aujourdhui }}" required>
+    </label>
+    <label>Arrivée
+        <input type="time" name="heure_arrivee" required>
+    </label>
+    <label>Départ
+        <input type="time" name="heure_depart" required>
+    </label>
+    <button type="submit" class="bouton-primaire">Enregistrer</button>
+</form>
+<p class="note">
+    Un jour déjà déclaré peut être corrigé pendant {{ delai_modification_heures }}h après sa déclaration
+    initiale, tant qu'il n'est pas encore validé. Passé ce délai, ou une fois validé, il n'est plus modifiable.
+</p>
+
+{% if taux_horaire %}
+<h2>Mon taux horaire moyen (mois en cours)</h2>
+<p class="texte-secondaire">Salaire brut mensuel applicable divisé par les heures validées ce mois-ci — visible uniquement par vous et les administrateurs.</p>
+<div class="resume-rapide">
+    <div class="carte"><span class="valeur">{{ taux_horaire }} €</span><span class="etiquette">Taux horaire moyen</span></div>
+</div>
+{% endif %}
+
+<h2>Mes horaires</h2>
+{% set base_url = "/heures/" %}
+{% include "heures/_filtre_periode.html" %}
+
+<div class="resume-rapide">
+    <div class="carte"><span class="valeur">{{ total_heures }} h</span><span class="etiquette">Total sur la période</span></div>
+</div>
+
+{% include "heures/_graphique.html" %}
+
+<table>
+    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th>Statut</th></tr></thead>
+    <tbody>
+        {% for h in horaires %}
+        <tr>
+            <td>{{ h.date_affichage }}</td>
+            <td>{{ h.heure_arrivee }}</td>
+            <td>{{ h.heure_depart }}</td>
+            <td>{{ h.heures }}</td>
+            <td>
+                {% if h.statut == 'validé' %}<span class="etiquette-statut etiquette-statut-valide">Validé</span>
+                {% else %}<span class="etiquette-statut">Déclaré ({{ h.nb_validations }}/{{ seuil_validation if seuil_validation else '?' }})</span>{% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Aucun horaire sur cette période.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Horaires à valider</h2>
+{% if horaires_a_valider %}
+<table>
+    <thead><tr><th>Membre</th><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th></th></tr></thead>
+    <tbody>
+        {% for h in horaires_a_valider %}
+        <tr>
+            <td>{{ h.membre_nom }}</td>
+            <td>{{ h.date_affichage }}</td>
+            <td>{{ h.heure_arrivee }}</td>
+            <td>{{ h.heure_depart }}</td>
+            <td>{{ h.heures }}</td>
+            <td>
+                <form method="post" action="/heures/valider/{{ h.id }}" class="action-inline">
+                    <button type="submit" class="bouton-secondaire">Valider</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="texte-secondaire">Aucun horaire en attente de votre validation.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block titre %}Fiche d'identite {{ annee }} — Fee Mazine{% endblock %}
+{% block contenu %}
+
+<nav class="sousnav">
+    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthese</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Heures</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Accueillants</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Fiche structure</a>
+</nav>
+
+<form method="get" action="/bilan/fiche" class="filtres" style="margin-bottom: 20px;">
+    <label>Annee
+        <select name="annee" onchange="this.form.submit()">
+            {% for a in annees %}
+            <option value="{{ a }}" {{ 'selected' if a == annee }}>{{ a }}</option>
+            {% endfor %}
+        </select>
+    </label>
+</form>
+
+<h2>Fiche d'identite de la structure — {{ annee }}</h2>
+
+<form method="post" action="/bilan/fiche">
+    <input type="hidden" name="annee" value="{{ annee }}">
+
+    <fieldset>
+        <legend>Caracteristiques de la structure</legend>
+
+        <label>
+            <input type="checkbox" name="lieu_dedie" value="on"
+                   {{ 'checked' if fiche and fiche.lieu_dedie }}>
+            Local dedie au LAEP
+        </label>
+
+        <label>
+            <input type="checkbox" name="charte_signee" value="on"
+                   {{ 'checked' if fiche and fiche.charte_signee }}>
+            Charte du LAEP signee
+        </label>
+
+        <label>
+            <input type="checkbox" name="supervision" value="on"
+                   {{ 'checked' if fiche and fiche.supervision }}>
+            Supervision / analyse des pratiques mise en place
+        </label>
+
+        <label>
+            <input type="checkbox" name="partenariat" value="on"
+                   {{ 'checked' if fiche and fiche.partenariat }}>
+            Convention de partenariat signee
+        </label>
+
+        <label>
+            <input type="checkbox" name="reseau_laep" value="on"
+                   {{ 'checked' if fiche and fiche.reseau_laep }}>
+            Participation a un reseau LAEP
+        </label>
+
+        <label>
+            <input type="checkbox" name="comite_pilotage" value="on"
+                   {{ 'checked' if fiche and fiche.comite_pilotage }}>
+            Comite de pilotage constitue
+        </label>
+    </fieldset>
+
+    <label>Observations complementaires
+        <textarea name="observations" rows="4" style="width:100%">{{ fiche.observations if fiche and fiche.observations else '' }}</textarea>
+    </label>
+
+    <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">
+        Enregistrer la fiche {{ annee }}
+    </button>
+</form>
+
+<p class="note">
+    La fiche d'identite est modifiable a tout moment pour l'annee en cours.
+    Une seule fiche existe par annee.
+</p>
+
+{% endblock %}

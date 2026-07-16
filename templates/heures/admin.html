@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block titre %}Admin — Heures{% endblock %}
+{% block contenu %}
+
+{% include "heures/_sousnav.html" %}
+
+<h2>Membres</h2>
+<table>
+    <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Salaire actuel</th><th>Taux horaire</th><th></th></tr></thead>
+    <tbody>
+        {% for l in lignes %}
+        <tr>
+            <td>{{ l.nom }}</td>
+            <td>{{ l.email }}</td>
+            <td>{{ l.role }}</td>
+            <td>{% if l.actif %}Actif{% else %}Désactivé{% endif %}</td>
+            <td>{% if l.salaire_actuel %}{{ l.salaire_actuel }} €{% else %}—{% endif %}</td>
+            <td>{% if l.taux_horaire %}{{ l.taux_horaire }} €/h{% else %}—{% endif %}</td>
+            <td>
+                {% if l.actif %}
+                <form method="post" action="/heures/admin/membres/{{ l.id }}/desactiver" class="action-inline">
+                    <button type="submit" class="bouton-tertiaire">Désactiver</button>
+                </form>
+                {% else %}
+                <form method="post" action="/heures/admin/membres/{{ l.id }}/reactiver" class="action-inline">
+                    <button type="submit" class="bouton-tertiaire">Réactiver</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">Aucun membre.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Ajouter un membre</h2>
+<form method="post" action="/heures/admin/membres" class="formulaire-horaire">
+    <label>Nom
+        <input type="text" name="nom" required>
+    </label>
+    <label>Email
+        <input type="email" name="email" required>
+    </label>
+    <label>Rôle
+        <select name="role">
+            <option value="membre">Membre</option>
+            <option value="admin">Admin</option>
+        </select>
+    </label>
+    <button type="submit" class="bouton-primaire">Ajouter</button>
+</form>
+
+<h2>Ajouter un salaire</h2>
+<p class="note">Une nouvelle ligne est ajoutée à l'historique du membre choisi ; les lignes existantes ne sont jamais modifiées.</p>
+<form method="post" action="/heures/admin/salaires" class="formulaire-horaire">
+    <label>Membre
+        <select name="membre_id" required>
+            {% for l in lignes %}<option value="{{ l.id }}">{{ l.nom }}</option>{% endfor %}
+        </select>
+    </label>
+    <label>Salaire brut mensuel (€)
+        <input type="number" step="0.01" min="0" name="salaire_brut_mensuel" required>
+    </label>
+    <label>Date d'effet
+        <input type="date" name="date_effet" required>
+    </label>
+    <button type="submit" class="bouton-primaire">Enregistrer</button>
+</form>
+
+<h2>Seuil de validation</h2>
+<p class="note">Nombre de validations distinctes nécessaires pour qu'un horaire déclaré passe au statut "validé".</p>
+<form method="post" action="/heures/admin/parametres" class="formulaire-horaire">
+    <label>Validations requises
+        <input type="number" min="1" name="seuil_validation" value="{{ seuil_validation }}" required>
+    </label>
+    <button type="submit" class="bouton-primaire">Mettre à jour</button>
+</form>
+
+{% endblock %}

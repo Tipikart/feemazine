@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block titre %}Modifier la carte {{ carte.id }} — Fee Mazine{% endblock %}
+{% block contenu %}
+
+<h2>Modifier la fiche carte</h2>
+
+<p class="texte-secondaire">
+    Carte <strong style="font-family: ui-monospace, monospace; letter-spacing: 0.05em;">{{ carte.id }}</strong>
+    — attribuee le {{ carte.date_attribution.strftime("%d/%m/%Y") }}
+</p>
+
+<form method="post" action="/cartes/modifier/{{ carte.id }}" id="form-modification">
+
+    <div class="compteur">
+        <span>Adultes dans le foyer</span>
+        <div class="boutons">
+            <button type="button" onclick="modifierCompteur('adultes', -1, 1)">-</button>
+            <span class="valeur" id="valeur-adultes">{{ carte.nb_adultes }}</span>
+            <button type="button" onclick="modifierCompteur('adultes', 1)">+</button>
+        </div>
+    </div>
+    <input type="hidden" name="nb_adultes" id="input-adultes" value="{{ carte.nb_adultes }}">
+
+    <h2>Enfants</h2>
+
+    <div id="liste-enfants"></div>
+
+    <button type="button" class="bouton-secondaire" onclick="ajouterEnfant()" style="margin-bottom: 16px;">
+        + Ajouter un enfant
+    </button>
+
+    <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">
+        Enregistrer les modifications
+    </button>
+</form>
+
+<p class="note" style="margin-top: 16px;">
+    <a href="/cartes/modifier" class="bouton-tertiaire">Modifier une autre carte</a>
+    <a href="/cartes/" class="bouton-tertiaire">Retour a la gestion</a>
+</p>
+
+<script>
+    let nbEnfants = 0;
+
+    function modifierCompteur(nom, delta, min) {
+        min = min || 0;
+        const champValeur = document.getElementById('valeur-' + nom);
+        const champInput = document.getElementById('input-' + nom);
+        let valeur = parseInt(champValeur.textContent, 10) + delta;
+        if (valeur < min) valeur = min;
+        champValeur.textContent = valeur;
+        champInput.value = valeur;
+    }
+
+    function ajouterEnfant(dateNaissance, trancheDeclaree) {
+        const idx = nbEnfants++;
+        const div = document.createElement('div');
+        div.className = 'bloc-enfant';
+        div.id = 'enfant-' + idx;
+        div.innerHTML = `
+            <div class="bloc-enfant-entete">
+                <span class="etiquette-section">Enfant ${idx + 1}</span>
+                <button type="button" class="bouton-tertiaire" onclick="retirerEnfant(${idx})">Retirer</button>
+            </div>
+            <div class="bloc-enfant-champs">
+                <label>Date de naissance
+                    <input type="date" name="enfant_date_${idx}" value="${dateNaissance || ''}">
+                </label>
+                <label>Ou tranche d'age
+                    <select name="enfant_tranche_${idx}">
+                        <option value="">— Date preferee —</option>
+                        <option value="0-3" ${trancheDeclaree === '0-3' ? 'selected' : ''}>0-3 ans</option>
+                        <option value="4-6" ${trancheDeclaree === '4-6' ? 'selected' : ''}>4-6 ans</option>
+                    </select>
+                </label>
+            </div>
+        `;
+        document.getElementById('liste-enfants').appendChild(div);
+    }
+
+    function retirerEnfant(idx) {
+        const el = document.getElementById('enfant-' + idx);
+        if (el) el.remove();
+    }
+
+    {% for enfant in carte.enfants %}
+    ajouterEnfant(
+        {{ enfant.date_naissance.isoformat() | tojson if enfant.date_naissance else "null" }},
+        {{ enfant.tranche_declaree | tojson if enfant.tranche_declaree else "null" }}
+    );
+    {% endfor %}
+
+    {% if not carte.enfants %}
+    ajouterEnfant();
+    {% endif %}
+</script>
+
+{% endblock %}

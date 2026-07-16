@@ -1,0 +1,11 @@
+data/*.xlsx
+data/backups/
+data/suivi.json
+data/parametres.json
+data/*.db
+data/secret.key
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/

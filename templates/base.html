@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titre %}Fée Mazine{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="entete">
+        <div class="entete-marque">
+            <img src="/static/logo.svg" alt="Logo Fée Mazine" class="logo">
+            <h1>Fée Mazine — Pointage des passages</h1>
+        </div>
+        <nav>
+            <a href="/" class="{{ 'actif' if actif == 'accueil' }}">Pointage</a>
+            <a href="/statistiques" class="{{ 'actif' if actif == 'statistiques' }}">Statistiques</a>
+            <a href="/importer" class="{{ 'actif' if actif == 'importer' }}">Importer</a>
+            <a href="/cartes/" class="{{ 'actif' if actif == 'cartes' }}">Cartes</a>
+            <a href="/heures/" class="{{ 'actif' if actif == 'heures' }}">Heures</a>
+            <a href="/bilan/" class="{{ 'actif' if actif == 'bilan' }}">Bilan CAF</a>
+        </nav>
+    </header>
+
+    <main>
+        {% if erreur %}<p class="message erreur">{{ erreur }}</p>{% endif %}
+        {% if confirmation %}<p class="message confirmation">{{ confirmation }}</p>{% endif %}
+
+        {% block contenu %}{% endblock %}
+    </main>
+</body>
+</html>

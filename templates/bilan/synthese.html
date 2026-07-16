@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block titre %}Bilan CAF {{ annee }} — Fee Mazine{% endblock %}
+{% block contenu %}
+
+<nav class="sousnav">
+    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthese</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Heures</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Accueillants</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Fiche structure</a>
+</nav>
+
+<form method="get" action="/bilan/" class="filtres" style="justify-content: space-between;">
+    <label>Annee
+        <select name="annee" onchange="this.form.submit()">
+            {% for a in annees %}
+            <option value="{{ a }}" {{ 'selected' if a == annee }}>{{ a }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="button" class="bouton-secondaire" onclick="window.print()">Imprimer</button>
+</form>
+
+<h2>Volet 1 — Heures d'activite</h2>
+
+<div style="overflow-x: auto;">
+<table class="tableau-bilan">
+    <thead>
+        <tr>
+            <th>Mois</th>
+            <th>Ouverture au public</th>
+            <th>Preparation, rangement, debriefing</th>
+            <th>Analyse des pratiques</th>
+            <th>Reunion d'equipe / Reseau</th>
+            <th>Organisation</th>
+            <th>Fonctionnement</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in range(1, 13) %}
+        {% set d = heures.par_mois[m] %}
+        <tr>
+            <td>{{ noms_mois[m] }}</td>
+            <td>{{ fmt(d.ouverture_public) }}</td>
+            <td>{{ fmt(d.preparation_rangement_debriefing) }}</td>
+            <td>{{ fmt(d.analyse_pratique_supervision) }}</td>
+            <td>{{ fmt(d.reunion_equipe_reseau) }}</td>
+            <td>{{ fmt(d.organisation) }}</td>
+            <td>{{ fmt(d.fonctionnement) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>{{ fmt(heures.total_ouverture) }}</strong></td>
+            <td><strong>{{ fmt(heures.totaux_type.preparation_rangement_debriefing) }}</strong></td>
+            <td><strong>{{ fmt(heures.totaux_type.analyse_pratique_supervision) }}</strong></td>
+            <td><strong>{{ fmt(heures.totaux_type.reunion_equipe_reseau) }}</strong></td>
+            <td><strong>{{ fmt(heures.total_organisation) }}</strong></td>
+            <td><strong>{{ fmt(heures.total_fonctionnement) }}</strong></td>
+        </tr>
+    </tfoot>
+</table>
+</div>
+
+<p class="note">
+    Heures d'organisation = preparation + analyse des pratiques + reunion d'equipe.
+    Heures de fonctionnement = ouverture au public + organisation.
+    Ces totaux sont calcules automatiquement et ne sont jamais stockes.
+</p>
+
+<section class="resume-rapide">
+    <div class="carte">
+        <span class="valeur">{{ heures.nb_seances }}</span>
+        <span class="etiquette">Seances (dates d'ouverture distinctes)</span>
+    </div>
+    <div class="carte">
+        <span class="valeur">{{ fmt(heures.total_ouverture) }}</span>
+        <span class="etiquette">Heures d'ouverture</span>
+    </div>
+    <div class="carte">
+        <span class="valeur">{{ fmt(heures.total_fonctionnement) }}</span>
+        <span class="etiquette">Heures de fonctionnement</span>
+    </div>
+</section>
+
+<h2>Volet 2 — Frequentation annuelle</h2>
+
+<section class="resume-rapide">
+    <div class="carte"><span class="valeur">{{ freq.total_passages }}</span><span class="etiquette">Passages</span></div>
+    <div class="carte"><span class="valeur">{{ freq.total_adultes }}</span><span class="etiquette">Adultes</span></div>
+    <div class="carte"><span class="valeur">{{ freq.total_enfants }}</span><span class="etiquette">Enfants</span></div>
+    <div class="carte"><span class="valeur">{{ freq.total_personnes }}</span><span class="etiquette">Personnes</span></div>
+</section>
+
+<table>
+    <thead><tr><th>Indicateur</th><th>Valeur</th></tr></thead>
+    <tbody>
+        <tr><td>Passages en mode carte (pseudonyme)</td><td>{{ freq.passages_carte }}</td></tr>
+        <tr><td>Passages en mode anonyme</td><td>{{ freq.passages_anonyme }}</td></tr>
+        <tr><td>Familles distinctes (cartes)</td><td>{{ freq.familles_carte }}</td></tr>
+        {% if freq.stats_cartes %}
+        <tr><td>Familles anonymes declarees (approximation)</td><td>{{ freq.stats_cartes.familles_anonyme_declarees }}</td></tr>
+        <tr><td>Total familles (approximation)</td><td>{{ freq.stats_cartes.familles_total_approx }}</td></tr>
+        <tr><td>Parents differents (approximation)</td><td>{{ freq.stats_cartes.parents_differents_approx }}</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% if freq.nouvelles_familles %}
+<table>
+    <thead><tr><th>Nouvelle famille</th><th>Passages</th></tr></thead>
+    <tbody>
+        {% for reponse, nb in freq.nouvelles_familles.items() %}
+        <tr><td>{{ reponse }}</td><td>{{ nb }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if freq.stats_cartes and freq.stats_cartes.tranches_age %}
+<table>
+    <thead><tr><th>Tranche d'age</th><th>Enfants (cartes actives)</th></tr></thead>
+    <tbody>
+        {% for tranche, nb in freq.stats_cartes.tranches_age.items() %}
+        <tr><td>{{ tranche }} ans</td><td>{{ nb }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<p class="note">
+    Les chiffres de frequentation sont derives des passages enregistres (module Pointage).
+    Les limites du comptage (familles anonymes, parents differents) sont documentees
+    dans la section "Cartes pseudonymes" du README.
+</p>
+
+<h2>Volet 3 — Fiche d'identite de la structure</h2>
+
+{% if fiche %}
+<table>
+    <thead><tr><th>Caracteristique</th><th>Reponse</th></tr></thead>
+    <tbody>
+        <tr><td>Local dedie au LAEP</td><td>{{ "Oui" if fiche.lieu_dedie else "Non" }}</td></tr>
+        <tr><td>Charte du LAEP signee</td><td>{{ "Oui" if fiche.charte_signee else "Non" }}</td></tr>
+        <tr><td>Supervision / analyse des pratiques</td><td>{{ "Oui" if fiche.supervision else "Non" }}</td></tr>
+        <tr><td>Convention de partenariat</td><td>{{ "Oui" if fiche.partenariat else "Non" }}</td></tr>
+        <tr><td>Participation a un reseau LAEP</td><td>{{ "Oui" if fiche.reseau_laep else "Non" }}</td></tr>
+        <tr><td>Comite de pilotage constitue</td><td>{{ "Oui" if fiche.comite_pilotage else "Non" }}</td></tr>
+    </tbody>
+</table>
+
+{% if fiche.observations %}
+<p class="texte-secondaire"><strong>Observations :</strong> {{ fiche.observations }}</p>
+{% endif %}
+
+{% else %}
+<p class="texte-secondaire">
+    Aucune fiche d'identite renseignee pour {{ annee }}.
+    <a href="/bilan/fiche?annee={{ annee }}">Renseigner la fiche</a>.
+</p>
+{% endif %}
+
+{% endblock %}

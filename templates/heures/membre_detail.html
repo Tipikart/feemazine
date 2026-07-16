@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block titre %}{{ membre_cible.nom }} — Heures{% endblock %}
+{% block contenu %}
+
+{% include "heures/_sousnav.html" %}
+
+<h2>{{ membre_cible.nom }}</h2>
+{% set base_url = "/heures/equipe/" ~ membre_cible.id %}
+{% include "heures/_filtre_periode.html" %}
+
+<div class="resume-rapide">
+    <div class="carte"><span class="valeur">{{ total_heures }} h</span><span class="etiquette">Total sur la période</span></div>
+    {% if peut_voir_taux and taux_horaire %}
+    <div class="carte"><span class="valeur">{{ taux_horaire }} €</span><span class="etiquette">Taux horaire moyen (mois en cours)</span></div>
+    {% endif %}
+</div>
+
+{% include "heures/_graphique.html" %}
+
+<table>
+    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th>Statut</th></tr></thead>
+    <tbody>
+        {% for h in horaires %}
+        <tr>
+            <td>{{ h.date_affichage }}</td>
+            <td>{{ h.heure_arrivee }}</td>
+            <td>{{ h.heure_depart }}</td>
+            <td>{{ h.heures }}</td>
+            <td>
+                {% if h.statut == 'validé' %}<span class="etiquette-statut etiquette-statut-valide">Validé</span>
+                {% else %}<span class="etiquette-statut">Déclaré</span>{% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Aucun horaire sur cette période.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p><a href="/heures/equipe" class="bouton-tertiaire">← Retour à l'équipe</a></p>
+
+{% endblock %}
