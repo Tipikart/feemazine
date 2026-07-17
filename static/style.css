@@ -203,6 +203,26 @@ input:disabled { background: var(--gris-50); color: var(--gris-500); }
     flex-shrink: 0;
 }
 
+/* Hamburger — hidden on desktop */
+.hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    margin-left: auto;
+    flex-direction: column;
+    gap: 5px;
+}
+.hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--gris-700);
+    border-radius: 2px;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
 .entete nav {
     display: flex;
     gap: 4px;
@@ -1178,32 +1198,66 @@ details summary:hover { color: var(--bleu); }
 
     h1 { font-size: 1rem; }
 
-    /* En-tete : nav en dessous du logo */
+    /* Hamburger menu mobile */
+    .hamburger { display: flex; }
+
     .entete {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 0;
         padding: 14px 0;
     }
 
+    .entete-marque {
+        justify-content: space-between;
+    }
+
+    .entete-marque .logo {
+        width: 32px;
+        height: 32px;
+    }
+
     .entete nav {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        display: none;
+        flex-direction: column;
         gap: 0;
-        padding-bottom: 4px;
+        padding: 12px 0 4px;
+        border-top: 1px solid var(--gris-200);
+        margin-top: 12px;
+    }
+
+    .entete nav.nav-ouverte {
+        display: flex;
     }
 
     .entete nav a,
-    .nav-lien,
-    .nav-dropdown-bouton {
-        flex-shrink: 0;
-        font-size: 0.82rem;
-        padding: 8px 6px;
-        margin: 0 4px;
+    .nav-lien {
+        display: block;
+        font-size: 0.92rem;
+        padding: 12px 8px;
+        margin: 0;
+        border-bottom: none;
+        border-radius: var(--rayon);
+    }
+
+    .entete nav a:hover,
+    .nav-lien:hover {
+        background: var(--gris-50);
     }
 
     .nav-dropdown {
-        margin: 0 4px;
+        margin: 0;
+    }
+
+    .nav-dropdown-bouton {
+        display: block;
+        width: 100%;
+        text-align: left;
+        font-size: 0.92rem;
+        padding: 12px 8px;
+        margin: 0;
+        border-bottom: none;
+        border-radius: var(--rayon);
     }
 
     .nav-dropdown-contenu {
@@ -1211,14 +1265,15 @@ details summary:hover { color: var(--bleu); }
         box-shadow: none;
         border: none;
         border-radius: 0;
-        padding: 0;
+        padding: 0 0 0 16px;
         min-width: auto;
         display: none;
     }
 
     .nav-dropdown-contenu a {
-        padding: 6px 12px 6px 20px;
-        font-size: 0.8rem;
+        padding: 10px 8px;
+        font-size: 0.88rem;
+        border-bottom: none;
     }
 
     .nav-dropdown-contenu a.actif {
@@ -1226,13 +1281,14 @@ details summary:hover { color: var(--bleu); }
     }
 
     .nav-dropdown:focus-within .nav-dropdown-contenu,
-    .nav-dropdown-contenu:target {
+    .nav-dropdown.ouvert .nav-dropdown-contenu {
         display: block;
     }
 
-    .entete-marque .logo {
-        width: 32px;
-        height: 32px;
+    .lien-deconnexion {
+        margin-top: 8px;
+        padding-top: 12px;
+        border-top: 1px solid var(--gris-200);
     }
 
     /* Tableaux : scroll horizontal si trop larges */
