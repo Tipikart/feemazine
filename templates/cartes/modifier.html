@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block titre %}Modifier la carte {{ carte.id }} — Fee Mazine{% endblock %}
+{% block titre %}Modifier la carte {{ carte.id }} — Fée Mazine{% endblock %}
 {% block contenu %}
 
 <h2>Modifier la fiche carte</h2>
 
 <p class="texte-secondaire">
     Carte <strong style="font-family: ui-monospace, monospace; letter-spacing: 0.05em;">{{ carte.id }}</strong>
-    — attribuee le {{ carte.date_attribution.strftime("%d/%m/%Y") }}
+    — attribuée le {{ carte.date_attribution.strftime("%d/%m/%Y") }}
 </p>
 
 <form method="post" action="/cartes/modifier/{{ carte.id }}" id="form-modification">
@@ -36,7 +36,7 @@
 
 <p class="note" style="margin-top: 16px;">
     <a href="/cartes/modifier" class="bouton-tertiaire">Modifier une autre carte</a>
-    <a href="/cartes/" class="bouton-tertiaire">Retour a la gestion</a>
+    <a href="/cartes/" class="bouton-tertiaire">Retour à la gestion</a>
 </p>
 
 <script>
@@ -66,9 +66,9 @@
                 <label>Date de naissance
                     <input type="date" name="enfant_date_${idx}" value="${dateNaissance || ''}">
                 </label>
-                <label>Ou tranche d'age
+                <label>Ou tranche d'âge
                     <select name="enfant_tranche_${idx}">
-                        <option value="">— Date preferee —</option>
+                        <option value="">— Date préférée —</option>
                         <option value="0-3" ${trancheDeclaree === '0-3' ? 'selected' : ''}>0-3 ans</option>
                         <option value="4-6" ${trancheDeclaree === '4-6' ? 'selected' : ''}>4-6 ans</option>
                     </select>

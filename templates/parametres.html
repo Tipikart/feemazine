@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block titre %}Paramètres — Fée Mazine{% endblock %}
+{% block contenu %}
+
+<h2>Partage avec l'équipe</h2>
+
+<div class="actions-fichier">
+    <form method="post" action="/partager/email" id="form-partage-email" class="action-inline"></form>
+    <button
+        type="button"
+        class="bouton-secondaire bouton-partage"
+        data-configure="{{ 'oui' if parametres.email_configure else 'non' }}"
+        onclick="gererPartage('email', this)"
+    >Envoyer par email</button>
+
+    <form method="post" action="/partager/drive" id="form-partage-drive" class="action-inline"></form>
+    <button
+        type="button"
+        class="bouton-secondaire bouton-partage"
+        data-configure="{{ 'oui' if parametres.drive_configure else 'non' }}"
+        onclick="gererPartage('drive', this)"
+    >Envoyer vers Google Drive</button>
+</div>
+
+<div class="actions-fichier" style="margin-top: 8px;">
+    <button type="button" class="bouton-tertiaire" onclick="ouvrirModale('modale-email')">&#9881; Réglages email</button>
+    <button type="button" class="bouton-tertiaire" onclick="ouvrirModale('modale-drive')">&#9881; Réglages Drive</button>
+</div>
+
+<h2>Fichier Excel</h2>
+
+<div class="actions-fichier">
+    <form method="post" action="/ouvrir" class="action-inline">
+        <button type="submit" class="bouton-secondaire">Télécharger le fichier Excel</button>
+    </form>
+    <a href="/export" class="bouton-secondaire">Exporter</a>
+    <a href="/importer" class="bouton-secondaire">Importer</a>
+</div>
+
+<div class="infos-fichier">
+    <p>Dernière modification : <strong>{{ infos.derniere_modification }}</strong></p>
+    <p>Dernier export : <strong>{{ infos.dernier_export }}</strong></p>
+    <p>
+        Dernier partage : <strong>{{ infos.dernier_partage }}</strong>
+        {% if infos.dernier_partage_moyen %}<span class="etiquette-section">({{ infos.dernier_partage_moyen }})</span>{% endif %}
+    </p>
+</div>
+
+<div class="modale-fond" id="modale-email">
+    <div class="modale">
+        <div class="modale-entete">
+            <h2>Configurer l'envoi par email</h2>
+            <button type="button" class="modale-fermer" onclick="fermerModale('modale-email')" aria-label="Fermer">&times;</button>
+        </div>
+        <p class="note">Ces paramètres restent sur ce poste (fichier local, jamais partagé ailleurs).</p>
+        <form method="post" action="/parametres/email">
+            <label>Serveur SMTP
+                <input type="text" name="smtp_serveur" value="{{ parametres.smtp_serveur }}" placeholder="ex. smtp.gmail.com" required>
+            </label>
+            <label>Port
+                <input type="number" name="smtp_port" value="{{ parametres.smtp_port }}" required>
+            </label>
+            <label>Adresse email d'envoi
+                <input type="email" name="smtp_utilisateur" value="{{ parametres.smtp_utilisateur }}" required>
+            </label>
+            <label>
+                Mot de passe {% if parametres.smtp_mot_de_passe_defini %}<span class="note">(déjà renseigné, laisser vide pour le conserver)</span>{% endif %}
+                <input type="password" name="smtp_mot_de_passe" {% if not parametres.smtp_mot_de_passe_defini %}required{% endif %}>
+            </label>
+            <label>Destinataires (séparés par des virgules)
+                <input type="text" name="email_destinataires" value="{{ parametres.email_destinataires }}" placeholder="equipe@feemazine.fr" required>
+            </label>
+            <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer et envoyer</button>
+        </form>
+    </div>
+</div>
+
+<div class="modale-fond" id="modale-drive">
+    <div class="modale">
+        <div class="modale-entete">
+            <h2>Configurer Google Drive</h2>
+            <button type="button" class="modale-fermer" onclick="fermerModale('modale-drive')" aria-label="Fermer">&times;</button>
+        </div>
+        <p class="note">
+            L'envoi automatique vers Google Drive n'est pas encore actif dans ce pilote ; ces
+            identifiants sont enregistrés localement en préparation de cette fonctionnalité.
+        </p>
+        <form method="post" action="/parametres/drive">
+            <label>Identifiant du dossier Google Drive
+                <input type="text" name="google_drive_dossier_id" value="{{ parametres.google_drive_dossier_id }}" required>
+            </label>
+            <label>
+                Identifiants du compte de service (JSON) {% if parametres.google_drive_identifiants_definis %}<span class="note">(déjà renseignés, laisser vide pour les conserver)</span>{% endif %}
+                <textarea name="google_drive_identifiants" rows="5" placeholder='{"type": "service_account", ...}'></textarea>
+            </label>
+            <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function gererPartage(cible, bouton) {
+        if (bouton.dataset.configure === 'oui') {
+            document.getElementById('form-partage-' + cible).submit();
+        } else {
+            ouvrirModale('modale-' + cible);
+        }
+    }
+
+    function ouvrirModale(id) {
+        document.getElementById(id).classList.add('modale-visible');
+    }
+
+    function fermerModale(id) {
+        document.getElementById(id).classList.remove('modale-visible');
+    }
+
+    document.querySelectorAll('.modale-fond').forEach(function (fond) {
+        fond.addEventListener('click', function (evenement) {
+            if (evenement.target === fond) {
+                fond.classList.remove('modale-visible');
+            }
+        });
+    });
+</script>
+{% endblock %}

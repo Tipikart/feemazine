@@ -1,36 +1,36 @@
 {% extends "base.html" %}
-{% block titre %}Pointage — Fee Mazine{% endblock %}
+{% block titre %}Pointage — Fée Mazine{% endblock %}
 {% block contenu %}
 
-<h2>Nouveau passage</h2>
+<div class="pointage-hero">
+    <div class="pointage-compteur-jour">
+        <span class="pointage-compteur-valeur" id="compteur-jour">{{ stats.aujourdhui }}</span>
+        <span class="pointage-compteur-label">passages aujourd'hui</span>
+    </div>
+</div>
 
 <div class="choix-mode">
-    <button type="button" class="bouton-mode actif" id="btn-mode-carte" onclick="choisirMode('carte')">Entrer un code famille</button>
-    <button type="button" class="bouton-mode" id="btn-mode-anonyme" onclick="choisirMode('anonyme')">Passage sans code</button>
+    <button type="button" class="bouton-mode actif" id="btn-mode-carte" onclick="choisirMode('carte')">Code carte</button>
+    <button type="button" class="bouton-mode" id="btn-mode-anonyme" onclick="choisirMode('anonyme')">Sans code</button>
 </div>
 
 <div id="section-carte" class="section-mode">
     <form method="post" action="/passage-carte" class="formulaire-carte-passage">
         <label>Code de la carte
-            <input type="text" name="code" placeholder="XXXX-XXXX-XXXX" required
-                   style="text-transform: uppercase; letter-spacing: 0.1em; font-family: ui-monospace, monospace; font-size: 1.1rem;">
+            <input type="text" name="code" placeholder="XXXX-XXXX-XXXX" required autofocus
+                   class="input-code-carte">
         </label>
         <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer le passage</button>
-        <div class="carte-attribution">
-            <p class="carte-attribution-texte">
-                <strong>La famille n'a pas de code ?</strong>
-            </p>
-            <a href="/cartes/attribuer" class="bouton-primaire carte-attribution-bouton">
-                &#43; Attribuer une nouvelle carte
-            </a>
-        </div>
+        <p class="note" style="text-align: center; margin-top: 12px;">
+            Pas de carte ? <a href="/cartes/attribuer">Attribuer une nouvelle carte</a>
+        </p>
     </form>
 </div>
 
 <div id="section-anonyme" class="section-mode" style="display: none;">
     <form method="post" action="/">
         <div class="compteur">
-            <span>Adultes presents</span>
+            <span>Adultes présents</span>
             <div class="boutons">
                 <button type="button" onclick="modifierCompteur('adultes', -1)" aria-label="Retirer un adulte">-</button>
                 <span class="valeur" id="valeur-adultes">0</span>
@@ -40,7 +40,7 @@
         <input type="hidden" name="adultes" id="input-adultes" value="0">
 
         <div class="compteur">
-            <span>Enfants presents</span>
+            <span>Enfants présents</span>
             <div class="boutons">
                 <button type="button" onclick="modifierCompteur('enfants', -1)" aria-label="Retirer un enfant">-</button>
                 <span class="valeur" id="valeur-enfants">0</span>
@@ -49,114 +49,28 @@
         </div>
         <input type="hidden" name="enfants" id="input-enfants" value="0">
 
-        <fieldset>
-            <legend>Nouvelle famille aujourd'hui</legend>
-            <label><input type="radio" name="nouvelle_famille" value="Oui"> Oui</label>
-            <label><input type="radio" name="nouvelle_famille" value="Non"> Non</label>
-            <label><input type="radio" name="nouvelle_famille" value="Non renseigne" checked> Non renseigne</label>
-        </fieldset>
+        <div class="toggle-nouvelle-famille">
+            <span>Nouvelle famille ?</span>
+            <div class="boutons-toggle">
+                <button type="button" class="bouton-toggle" data-value="Oui" onclick="choisirNouvelleFamille(this)">Oui</button>
+                <button type="button" class="bouton-toggle" data-value="Non" onclick="choisirNouvelleFamille(this)">Non</button>
+            </div>
+            <input type="hidden" name="nouvelle_famille" id="input-nouvelle-famille" value="Non renseigné">
+        </div>
 
         <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Valider ce passage</button>
     </form>
 </div>
 
-<section class="resume-rapide">
-    <div class="carte"><span class="valeur">{{ stats.aujourdhui }}</span><span class="etiquette">Aujourd'hui</span></div>
-    <div class="carte"><span class="valeur">{{ stats.semaine }}</span><span class="etiquette">Cette semaine</span></div>
-    <div class="carte"><span class="valeur">{{ stats.mois }}</span><span class="etiquette">Ce mois-ci</span></div>
-    <div class="carte"><span class="valeur">{{ stats.annee }}</span><span class="etiquette">Cette annee</span></div>
-</section>
-
-<section class="actions-fichier">
-    <span class="etiquette-section">Partager avec l'equipe :</span>
-
-    <form method="post" action="/partager/email" id="form-partage-email" class="action-inline"></form>
-    <button
-        type="button"
-        class="bouton-secondaire bouton-partage"
-        data-configure="{{ 'oui' if parametres.email_configure else 'non' }}"
-        onclick="gererPartage('email', this)"
-    >Par email</button>
-
-    <form method="post" action="/partager/drive" id="form-partage-drive" class="action-inline"></form>
-    <button
-        type="button"
-        class="bouton-secondaire bouton-partage"
-        data-configure="{{ 'oui' if parametres.drive_configure else 'non' }}"
-        onclick="gererPartage('drive', this)"
-    >Vers Google Drive</button>
-
-    <button type="button" class="bouton-tertiaire" onclick="ouvrirModale('modale-email')">&#9881; Reglages email</button>
-    <button type="button" class="bouton-tertiaire" onclick="ouvrirModale('modale-drive')">&#9881; Reglages Drive</button>
-</section>
-
-<section class="infos-fichier">
-    <div class="actions-fichier actions-fichier-imbriquee">
-        <form method="post" action="/ouvrir" class="action-inline">
-            <button type="submit" class="bouton-secondaire">Ouvrir le fichier Excel</button>
-        </form>
-        <a href="/export" class="bouton-secondaire">Exporter le fichier Excel</a>
-        <a href="/importer" class="bouton-secondaire">Importer un fichier Excel</a>
-    </div>
-    <p>Derniere modification : <strong>{{ infos.derniere_modification }}</strong></p>
-    <p>Dernier export : <strong>{{ infos.dernier_export }}</strong></p>
-    <p>
-        Dernier partage : <strong>{{ infos.dernier_partage }}</strong>
-        {% if infos.dernier_partage_moyen %}<span class="etiquette-section">({{ infos.dernier_partage_moyen }})</span>{% endif %}
-    </p>
-</section>
-
-<div class="modale-fond" id="modale-email">
-    <div class="modale">
-        <div class="modale-entete">
-            <h2>Configurer l'envoi par email</h2>
-            <button type="button" class="modale-fermer" onclick="fermerModale('modale-email')" aria-label="Fermer">&times;</button>
-        </div>
-        <p class="note">Ces parametres restent sur ce poste (fichier local, jamais partage ailleurs).</p>
-        <form method="post" action="/parametres/email">
-            <label>Serveur SMTP
-                <input type="text" name="smtp_serveur" value="{{ parametres.smtp_serveur }}" placeholder="ex. smtp.gmail.com" required>
-            </label>
-            <label>Port
-                <input type="number" name="smtp_port" value="{{ parametres.smtp_port }}" required>
-            </label>
-            <label>Adresse email d'envoi
-                <input type="email" name="smtp_utilisateur" value="{{ parametres.smtp_utilisateur }}" required>
-            </label>
-            <label>
-                Mot de passe {% if parametres.smtp_mot_de_passe_defini %}<span class="note">(deja renseigne, laisser vide pour le conserver)</span>{% endif %}
-                <input type="password" name="smtp_mot_de_passe" {% if not parametres.smtp_mot_de_passe_defini %}required{% endif %}>
-            </label>
-            <label>Destinataires (separes par des virgules)
-                <input type="text" name="email_destinataires" value="{{ parametres.email_destinataires }}" placeholder="equipe@feemazine.fr" required>
-            </label>
-            <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer et envoyer</button>
-        </form>
-    </div>
-</div>
-
-<div class="modale-fond" id="modale-drive">
-    <div class="modale">
-        <div class="modale-entete">
-            <h2>Configurer Google Drive</h2>
-            <button type="button" class="modale-fermer" onclick="fermerModale('modale-drive')" aria-label="Fermer">&times;</button>
-        </div>
-        <p class="note">
-            L'envoi automatique vers Google Drive n'est pas encore actif dans ce pilote ; ces
-            identifiants sont enregistres localement en preparation de cette fonctionnalite.
-        </p>
-        <form method="post" action="/parametres/drive">
-            <label>Identifiant du dossier Google Drive
-                <input type="text" name="google_drive_dossier_id" value="{{ parametres.google_drive_dossier_id }}" required>
-            </label>
-            <label>
-                Identifiants du compte de service (JSON) {% if parametres.google_drive_identifiants_definis %}<span class="note">(deja renseignes, laisser vide pour les conserver)</span>{% endif %}
-                <textarea name="google_drive_identifiants" rows="5" placeholder='{"type": "service_account", ...}'></textarea>
-            </label>
-            <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer</button>
-        </form>
-    </div>
-</div>
+<details class="resume-details">
+    <summary>Voir les statistiques rapides</summary>
+    <section class="resume-rapide">
+        <div class="carte"><span class="valeur">{{ stats.aujourdhui }}</span><span class="etiquette">Aujourd'hui</span></div>
+        <div class="carte"><span class="valeur">{{ stats.semaine }}</span><span class="etiquette">Cette semaine</span></div>
+        <div class="carte"><span class="valeur">{{ stats.mois }}</span><span class="etiquette">Ce mois-ci</span></div>
+        <div class="carte"><span class="valeur">{{ stats.annee }}</span><span class="etiquette">Cette année</span></div>
+    </section>
+</details>
 
 {% if aucune_heure_aujourdhui and est_responsable %}
 <div class="modale-fond modale-visible" id="modale-declarer-journee">
@@ -331,14 +245,15 @@
         document.getElementById('section-anonyme').style.display = mode === 'anonyme' ? '' : 'none';
         document.getElementById('btn-mode-carte').classList.toggle('actif', mode === 'carte');
         document.getElementById('btn-mode-anonyme').classList.toggle('actif', mode === 'anonyme');
+        if (mode === 'carte') {
+            document.querySelector('.input-code-carte').focus();
+        }
     }
 
-    function gererPartage(cible, bouton) {
-        if (bouton.dataset.configure === 'oui') {
-            document.getElementById('form-partage-' + cible).submit();
-        } else {
-            ouvrirModale('modale-' + cible);
-        }
+    function choisirNouvelleFamille(btn) {
+        document.querySelectorAll('.bouton-toggle').forEach(function(b) { b.classList.remove('actif'); });
+        btn.classList.add('actif');
+        document.getElementById('input-nouvelle-famille').value = btn.dataset.value;
     }
 
     function ouvrirModale(id) {
@@ -356,5 +271,15 @@
             }
         });
     });
+
+    // Toast de confirmation auto-dismiss
+    (function() {
+        var toast = document.querySelector('.message.confirmation');
+        if (toast) {
+            toast.classList.add('toast');
+            setTimeout(function() { toast.classList.add('toast-sortie'); }, 3000);
+            setTimeout(function() { toast.remove(); }, 3500);
+        }
+    })();
 </script>
 {% endblock %}

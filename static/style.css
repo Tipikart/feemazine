@@ -1,5 +1,4 @@
 :root {
-    /* Palette : noir/blanc, accent bleu unique, lignes fines */
     --gris-900: #111827;
     --gris-700: #374151;
     --gris-500: #6b7280;
@@ -24,6 +23,86 @@
 
     --rayon: 8px;
     --rayon-petit: 6px;
+    --ombre: 0 4px 16px rgba(17, 24, 39, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --gris-900: #f0f0ed;
+        --gris-700: #c8c5bc;
+        --gris-500: #9b9790;
+        --gris-300: #3d3b36;
+        --gris-200: #2e2c28;
+        --gris-100: #252320;
+        --gris-50: #1e1d1a;
+        --blanc: #171614;
+
+        --bleu: #5b8def;
+        --bleu-fonce: #7ba3f5;
+        --bleu-clair: #1c2333;
+        --bleu-bordure: #2a3a5c;
+
+        --rouge: #f87171;
+        --rouge-clair: #2d1b1b;
+        --rouge-bordure: #5c2a2a;
+
+        --succes-vert: #6ee7a0;
+        --succes-vert-clair: #1a2d22;
+        --succes-vert-bordure: #2a5c3a;
+
+        --ombre: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+}
+
+:root[data-theme="dark"] {
+    --gris-900: #f0f0ed;
+    --gris-700: #c8c5bc;
+    --gris-500: #9b9790;
+    --gris-300: #3d3b36;
+    --gris-200: #2e2c28;
+    --gris-100: #252320;
+    --gris-50: #1e1d1a;
+    --blanc: #171614;
+
+    --bleu: #5b8def;
+    --bleu-fonce: #7ba3f5;
+    --bleu-clair: #1c2333;
+    --bleu-bordure: #2a3a5c;
+
+    --rouge: #f87171;
+    --rouge-clair: #2d1b1b;
+    --rouge-bordure: #5c2a2a;
+
+    --succes-vert: #6ee7a0;
+    --succes-vert-clair: #1a2d22;
+    --succes-vert-bordure: #2a5c3a;
+
+    --ombre: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="light"] {
+    --gris-900: #111827;
+    --gris-700: #374151;
+    --gris-500: #6b7280;
+    --gris-300: #d1d5db;
+    --gris-200: #e5e7eb;
+    --gris-100: #f3f4f6;
+    --gris-50: #f9fafb;
+    --blanc: #ffffff;
+
+    --bleu: #2563eb;
+    --bleu-fonce: #1d4ed8;
+    --bleu-clair: #eff6ff;
+    --bleu-bordure: #bfdbfe;
+
+    --rouge: #b91c1c;
+    --rouge-clair: #fef2f2;
+    --rouge-bordure: #fecaca;
+
+    --succes-vert: #15803d;
+    --succes-vert-clair: #f0fdf4;
+    --succes-vert-bordure: #bbf7d0;
+
     --ombre: 0 4px 16px rgba(17, 24, 39, 0.12);
 }
 
@@ -768,6 +847,141 @@ details summary:hover { color: var(--bleu); }
 
 .etiquette-statut-valide { background: var(--succes-vert-clair); color: var(--succes-vert); }
 
+/* ========== POINTAGE EPURE ========== */
+
+.pointage-hero {
+    display: flex;
+    justify-content: center;
+    padding: 32px 0 28px;
+}
+
+.pointage-compteur-jour {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.pointage-compteur-valeur {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--bleu);
+    font-variant-numeric: tabular-nums;
+}
+
+.pointage-compteur-label {
+    font-size: 0.85rem;
+    color: var(--gris-500);
+    font-weight: 500;
+}
+
+.input-code-carte {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 1.1rem;
+}
+
+/* Toggle Nouvelle famille (remplace les radio buttons) */
+
+.toggle-nouvelle-famille {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 14px 0;
+    padding: 12px 16px;
+    border: 1px solid var(--gris-200);
+    border-radius: var(--rayon);
+}
+
+.toggle-nouvelle-famille > span {
+    font-weight: 500;
+    font-size: 0.94rem;
+}
+
+.boutons-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--gris-300);
+    border-radius: var(--rayon-petit);
+    overflow: hidden;
+}
+
+.bouton-toggle {
+    padding: 6px 16px;
+    border: none;
+    background: var(--blanc);
+    color: var(--gris-700);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+}
+
+.bouton-toggle:not(:last-child) {
+    border-right: 1px solid var(--gris-300);
+}
+
+.bouton-toggle:hover {
+    background: var(--gris-50);
+}
+
+.bouton-toggle.actif {
+    background: var(--bleu);
+    color: var(--blanc);
+}
+
+/* Résumé stats pliable */
+
+.resume-details {
+    margin: 8px 0 24px;
+    border: 1px solid var(--gris-200);
+    border-radius: var(--rayon);
+    padding: 2px 14px;
+}
+
+.resume-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 10px 0;
+    color: var(--gris-500);
+}
+
+.resume-details summary:hover {
+    color: var(--bleu);
+}
+
+.resume-details .resume-rapide {
+    margin-bottom: 10px;
+}
+
+/* Toast de confirmation animé */
+
+.message.confirmation.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: toast-entree 0.3s ease-out;
+    max-width: 400px;
+}
+
+.message.confirmation.toast-sortie {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+    transition: opacity 0.4s, transform 0.4s;
+}
+
+@keyframes toast-entree {
+    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /* Cartes pseudonymes — choix de mode sur la page d'accueil */
 
 .choix-mode {
@@ -889,6 +1103,72 @@ details summary:hover { color: var(--bleu); }
     border-bottom: none;
 }
 
+/* ========== CARTES-TOGGLE (fiche structure) ========== */
+
+.cartes-toggle-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.carte-toggle {
+    display: block;
+    margin: 0;
+    cursor: pointer;
+}
+
+.carte-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.carte-toggle-contenu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border: 2px solid var(--gris-200);
+    border-radius: var(--rayon);
+    background: var(--blanc);
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--gris-700);
+}
+
+.carte-toggle-contenu:hover {
+    border-color: var(--gris-300);
+    background: var(--gris-50);
+}
+
+.carte-toggle input:checked + .carte-toggle-contenu {
+    border-color: var(--bleu);
+    background: var(--bleu-clair);
+    color: var(--gris-900);
+}
+
+.carte-toggle input:focus-visible + .carte-toggle-contenu {
+    outline: 2px solid var(--bleu);
+    outline-offset: 2px;
+}
+
+.carte-toggle-icone {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.carte-toggle-texte {
+    line-height: 1.3;
+}
+
+/* Lignes vides grisées dans le bilan CAF */
+
+.tableau-bilan tbody tr.ligne-vide td {
+    color: var(--gris-300);
+}
+
 /* ========== RESPONSIVE MOBILE ========== */
 
 @media (max-width: 768px) {
@@ -1005,6 +1285,14 @@ details summary:hover { color: var(--bleu); }
     .formulaire-bilan .champs-en-ligne { flex-direction: column; align-items: stretch; }
     .formulaire-bilan .champs-en-ligne label { width: 100%; }
 
+    /* Pointage hero */
+    .pointage-compteur-valeur { font-size: 3rem; }
+    .pointage-hero { padding: 20px 0 20px; }
+
+    /* Toggle nouvelle famille */
+    .toggle-nouvelle-famille { flex-direction: column; gap: 8px; align-items: stretch; }
+    .boutons-toggle { justify-content: center; }
+
     /* Choix de mode (cartes) */
     .choix-mode { flex-direction: column; }
     .bouton-mode:not(:last-child) { border-right: none; border-bottom: 1px solid var(--gris-300); }
@@ -1023,6 +1311,9 @@ details summary:hover { color: var(--bleu); }
 
     /* Modale */
     .modale { padding: 16px; border-radius: 8px; }
+
+    /* Cartes toggle (fiche structure) */
+    .cartes-toggle-grille { grid-template-columns: 1fr; }
 
     /* Graphiques */
     .graphique-conteneur { margin: 0 -12px 24px; }

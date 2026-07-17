@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block titre %}Heures d'activite — Fee Mazine{% endblock %}
+{% block titre %}Heures d'activité — Fée Mazine{% endblock %}
 {% block contenu %}
 
 <nav class="sousnav">
-    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Caracteristiques de la structure</a>
-    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Horaires de la structure</a>
-    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Equipe</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Caractéristiques</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Horaires</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Équipe</a>
 </nav>
 
 
-<h2>Heures enregistrees — {{ noms_mois[mois] }} {{ annee }}</h2>
+<h2>Heures enregistrées — {{ noms_mois[mois] }} {{ annee }}</h2>
 
 <div class="filtres-periode">
     {% for m in range(1, 13) %}
@@ -30,7 +30,7 @@
             <th>Date</th>
             <th>Accueillant</th>
             <th>Type</th>
-            <th>Duree</th>
+            <th>Durée</th>
             <th></th>
         </tr>
     </thead>
@@ -53,6 +53,6 @@
 </table>
 {% else %}
 {% endif %}
-<p class="texte-secondaire">Aucune heure enregistree pour {{ noms_mois[mois] }} {{ annee }}.</p>
+<p class="texte-secondaire">Aucune heure enregistrée pour {{ noms_mois[mois] }} {{ annee }}.</p>
 
 {% endblock %}

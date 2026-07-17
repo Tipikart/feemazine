@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block titre %}Cartes pseudonymes — Fee Mazine{% endblock %}
+{% block titre %}Familles — Fée Mazine{% endblock %}
 {% block contenu %}
 
 <h2>Cartes pseudonymes</h2>
 
 <p class="texte-secondaire">
-    Les cartes permettent un comptage certifie de familles distinctes sans collecter de donnee d'identite.
+    Les cartes permettent un comptage certifié de familles distinctes sans collecter de donnée d'identité.
     Chaque carte porte un code pseudonyme unique. L'attribution d'une carte reste strictement optionnelle.
 </p>
 
 <section class="resume-rapide">
     <div class="carte"><span class="valeur">{{ nb_actives }}</span><span class="etiquette">Cartes actives</span></div>
-    <div class="carte"><span class="valeur">{{ nb_inactives }}</span><span class="etiquette">Cartes desactivees</span></div>
+    <div class="carte"><span class="valeur">{{ nb_inactives }}</span><span class="etiquette">Cartes désactivées</span></div>
 </section>
 
 <section class="actions-fichier" style="margin-bottom: 24px;">
@@ -19,107 +19,21 @@
     <a href="/cartes/modifier" class="bouton-secondaire">Modifier une fiche carte</a>
 </section>
 
-<h2>Parametres</h2>
-
-<form method="post" action="/cartes/parametres" class="formulaire-horaire">
-    <label>Purge automatique apres (mois sans passage)
-        <input type="number" name="duree_purge" value="{{ duree_purge }}" min="1" required style="width: 80px;">
-    </label>
-    <button type="submit" class="bouton-secondaire">Enregistrer</button>
-</form>
-
-<p class="note">
-    Les cartes sans passage depuis plus de {{ duree_purge }} mois sont automatiquement desactivees
-    au demarrage du serveur. Les enfants associes sont supprimes, mais les passages deja
-    enregistres sont conserves (ils ne contiennent que des compteurs historiques).
-</p>
-
-<hr style="margin: 2rem 0; opacity: 0.2;">
-
-<section class="resume-rapide">
-    <div class="carte"><span class="valeur">{{ stats.aujourdhui }}</span><span class="etiquette">Aujourd'hui</span></div>
-    <div class="carte"><span class="valeur">{{ stats.semaine }}</span><span class="etiquette">Cette semaine</span></div>
-    <div class="carte"><span class="valeur">{{ stats.mois }}</span><span class="etiquette">Ce mois-ci</span></div>
-    <div class="carte"><span class="valeur">{{ stats.annee }}</span><span class="etiquette">Cette annee</span></div>
-</section>
-
-<section class="infos-fichier">
-    <div class="actions-fichier actions-fichier-imbriquee">
-        <a href="/export" class="bouton-secondaire">Exporter le fichier Excel</a>
-        <a href="/importer" class="bouton-secondaire">Importer un fichier Excel</a>
-    </div>
-    <p>Derniere modification : <strong>{{ infos.derniere_modification }}</strong></p>
-    <p>Dernier export : <strong>{{ infos.dernier_export }}</strong></p>
-    <p>
-        Dernier partage : <strong>{{ infos.dernier_partage }}</strong>
-        {% if infos.dernier_partage_moyen %}<span class="etiquette-section">({{ infos.dernier_partage_moyen }})</span>{% endif %}
+{% if request.state.est_admin %}
+<details class="resume-details">
+    <summary>Paramètres de purge</summary>
+    <form method="post" action="/cartes/parametres" class="formulaire-horaire" style="margin: 12px 0;">
+        <label>Purge automatique après (mois sans passage)
+            <input type="number" name="duree_purge" value="{{ duree_purge }}" min="1" required style="width: 80px;">
+        </label>
+        <button type="submit" class="bouton-secondaire">Enregistrer</button>
+    </form>
+    <p class="note">
+        Les cartes sans passage depuis plus de {{ duree_purge }} mois sont automatiquement désactivées
+        au démarrage du serveur. Les enfants associés sont supprimés, mais les passages déjà
+        enregistrés sont conservés (ils ne contiennent que des compteurs historiques).
     </p>
-</section>
-
-<div class="modale-fond" id="modale-email">
-    <div class="modale">
-        <div class="modale-entete">
-            <h2>Configurer l'envoi par email</h2>
-            <button type="button" class="modale-fermer" onclick="fermerModale('modale-email')" aria-label="Fermer">&times;</button>
-        </div>
-        <p class="note">Ces parametres restent sur ce poste (fichier local, jamais partage ailleurs).</p>
-        <form method="post" action="/parametres/email">
-            <label>Serveur SMTP
-                <input type="text" name="smtp_serveur" value="{{ parametres.smtp_serveur }}" placeholder="ex. smtp.gmail.com" required>
-            </label>
-            <label>Port
-                <input type="number" name="smtp_port" value="{{ parametres.smtp_port }}" required>
-            </label>
-            <label>Adresse email d'envoi
-                <input type="email" name="smtp_utilisateur" value="{{ parametres.smtp_utilisateur }}" required>
-            </label>
-            <label>
-                Mot de passe {% if parametres.smtp_mot_de_passe_defini %}<span class="note">(deja renseigne, laisser vide pour le conserver)</span>{% endif %}
-                <input type="password" name="smtp_mot_de_passe" {% if not parametres.smtp_mot_de_passe_defini %}required{% endif %}>
-            </label>
-            <label>Destinataires (separes par des virgules)
-                <input type="text" name="email_destinataires" value="{{ parametres.email_destinataires }}" placeholder="equipe@feemazine.fr" required>
-            </label>
-            <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer</button>
-        </form>
-    </div>
-</div>
-
-<div class="modale-fond" id="modale-drive">
-    <div class="modale">
-        <div class="modale-entete">
-            <h2>Configurer Google Drive</h2>
-            <button type="button" class="modale-fermer" onclick="fermerModale('modale-drive')" aria-label="Fermer">&times;</button>
-        </div>
-        <p class="note">
-            L'envoi automatique vers Google Drive n'est pas encore actif dans ce pilote ; ces
-            identifiants sont enregistres localement en preparation de cette fonctionnalite.
-        </p>
-        <form method="post" action="/parametres/drive">
-            <label>Identifiant du dossier Google Drive
-                <input type="text" name="google_drive_dossier_id" value="{{ parametres.google_drive_dossier_id }}" required>
-            </label>
-            <label>
-                Identifiants du compte de service (JSON) {% if parametres.google_drive_identifiants_definis %}<span class="note">(deja renseignes, laisser vide pour les conserver)</span>{% endif %}
-                <textarea name="google_drive_identifiants" rows="5" placeholder='{"type": "service_account", ...}'></textarea>
-            </label>
-            <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer</button>
-        </form>
-    </div>
-</div>
-
-<script>
-    function ouvrirModale(id) {
-        document.getElementById(id).classList.add('modale-visible');
-    }
-    function fermerModale(id) {
-        document.getElementById(id).classList.remove('modale-visible');
-    }
-    document.querySelectorAll('.modale-fond').forEach(function (fond) {
-        fond.addEventListener('click', function (e) {
-            if (e.target === fond) fond.classList.remove('modale-visible');
-        });
-    });
-</script>
+</details>
+{% endif %}
 
 {% endblock %}

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block titre %}Bilan CAF {{ annee }} — Fee Mazine{% endblock %}
+{% block titre %}Bilan CAF {{ annee }} — Fée Mazine{% endblock %}
 {% block contenu %}
 
 <nav class="sousnav">
-    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthese</a>
+    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthèse</a>
 </nav>
 
 <form method="get" action="/bilan/" class="filtres" style="justify-content: space-between;">
-    <label>Annee
+    <label>Année
         <select name="annee" onchange="this.form.submit()">
             {% for a in annees %}
             <option value="{{ a }}" {{ 'selected' if a == annee }}>{{ a }}</option>
@@ -17,7 +17,7 @@
     <button type="button" class="bouton-secondaire" onclick="window.print()">Imprimer</button>
 </form>
 
-<h2>Volet 1 — Heures d'activite</h2>
+<h2>Volet 1 — Heures d'activité</h2>
 
 <div style="overflow-x: auto;">
 <table class="tableau-bilan">
@@ -25,9 +25,9 @@
         <tr>
             <th>Mois</th>
             <th>Ouverture au public</th>
-            <th>Preparation, rangement, debriefing</th>
+            <th>Préparation, rangement, débriefing</th>
             <th>Analyse des pratiques</th>
-            <th>Reunion d'equipe / Reseau</th>
+            <th>Réunion d'équipe / Réseau</th>
             <th>Organisation</th>
             <th>Fonctionnement</th>
         </tr>
@@ -35,7 +35,8 @@
     <tbody>
         {% for m in range(1, 13) %}
         {% set d = heures.par_mois[m] %}
-        <tr>
+        {% set est_vide = d.ouverture_public == 0 and d.preparation_rangement_debriefing == 0 and d.analyse_pratique_supervision == 0 and d.reunion_equipe_reseau == 0 %}
+        <tr class="{{ 'ligne-vide' if est_vide }}">
             <td>{{ noms_mois[m] }}</td>
             <td>{{ fmt(d.ouverture_public) }}</td>
             <td>{{ fmt(d.preparation_rangement_debriefing) }}</td>
@@ -61,15 +62,15 @@
 </div>
 
 <p class="note">
-    Heures d'organisation = preparation + analyse des pratiques + reunion d'equipe.
+    Heures d'organisation = préparation + analyse des pratiques + réunion d'équipe.
     Heures de fonctionnement = ouverture au public + organisation.
-    Ces totaux sont calcules automatiquement et ne sont jamais stockes.
+    Ces totaux sont calculés automatiquement et ne sont jamais stockés.
 </p>
 
 <section class="resume-rapide">
     <div class="carte">
         <span class="valeur">{{ heures.nb_seances }}</span>
-        <span class="etiquette">Seances (dates d'ouverture distinctes)</span>
+        <span class="etiquette">Séances (dates d'ouverture distinctes)</span>
     </div>
     <div class="carte">
         <span class="valeur">{{ fmt(heures.total_ouverture) }}</span>
@@ -81,7 +82,7 @@
     </div>
 </section>
 
-<h2>Volet 2 — Frequentation annuelle</h2>
+<h2>Volet 2 — Fréquentation annuelle</h2>
 
 <section class="resume-rapide">
     <div class="carte"><span class="valeur">{{ freq.total_passages }}</span><span class="etiquette">Passages</span></div>
@@ -97,9 +98,9 @@
         <tr><td>Passages en mode anonyme</td><td>{{ freq.passages_anonyme }}</td></tr>
         <tr><td>Familles distinctes (cartes)</td><td>{{ freq.familles_carte }}</td></tr>
         {% if freq.stats_cartes %}
-        <tr><td>Familles anonymes declarees (approximation)</td><td>{{ freq.stats_cartes.familles_anonyme_declarees }}</td></tr>
+        <tr><td>Familles anonymes déclarées (approximation)</td><td>{{ freq.stats_cartes.familles_anonyme_declarees }}</td></tr>
         <tr><td>Total familles (approximation)</td><td>{{ freq.stats_cartes.familles_total_approx }}</td></tr>
-        <tr><td>Parents differents (approximation)</td><td>{{ freq.stats_cartes.parents_differents_approx }}</td></tr>
+        <tr><td>Parents différents (approximation)</td><td>{{ freq.stats_cartes.parents_differents_approx }}</td></tr>
         {% endif %}
     </tbody>
 </table>
@@ -117,7 +118,7 @@
 
 {% if freq.stats_cartes and freq.stats_cartes.tranches_age %}
 <table>
-    <thead><tr><th>Tranche d'age</th><th>Enfants (cartes actives)</th></tr></thead>
+    <thead><tr><th>Tranche d'âge</th><th>Enfants (cartes actives)</th></tr></thead>
     <tbody>
         {% for tranche, nb in freq.stats_cartes.tranches_age.items() %}
         <tr><td>{{ tranche }} ans</td><td>{{ nb }}</td></tr>
@@ -127,23 +128,23 @@
 {% endif %}
 
 <p class="note">
-    Les chiffres de frequentation sont derives des passages enregistres (module Pointage).
-    Les limites du comptage (familles anonymes, parents differents) sont documentees
-    dans la section "Cartes pseudonymes" du README.
+    Les chiffres de fréquentation sont dérivés des passages enregistrés (module Pointage).
+    Les limites du comptage (familles anonymes, parents différents) sont documentées
+    dans la section « Cartes pseudonymes » du README.
 </p>
 
-<h2>Volet 3 — Fiche d'identite de la structure</h2>
+<h2>Volet 3 — Fiche d'identité de la structure</h2>
 
 {% if fiche %}
 <table>
-    <thead><tr><th>Caracteristique</th><th>Reponse</th></tr></thead>
+    <thead><tr><th>Caractéristique</th><th>Réponse</th></tr></thead>
     <tbody>
-        <tr><td>Local dedie au LAEP</td><td>{{ "Oui" if fiche.lieu_dedie else "Non" }}</td></tr>
-        <tr><td>Charte du LAEP signee</td><td>{{ "Oui" if fiche.charte_signee else "Non" }}</td></tr>
+        <tr><td>Local dédié au LAEP</td><td>{{ "Oui" if fiche.lieu_dedie else "Non" }}</td></tr>
+        <tr><td>Charte du LAEP signée</td><td>{{ "Oui" if fiche.charte_signee else "Non" }}</td></tr>
         <tr><td>Supervision / analyse des pratiques</td><td>{{ "Oui" if fiche.supervision else "Non" }}</td></tr>
         <tr><td>Convention de partenariat</td><td>{{ "Oui" if fiche.partenariat else "Non" }}</td></tr>
-        <tr><td>Participation a un reseau LAEP</td><td>{{ "Oui" if fiche.reseau_laep else "Non" }}</td></tr>
-        <tr><td>Comite de pilotage constitue</td><td>{{ "Oui" if fiche.comite_pilotage else "Non" }}</td></tr>
+        <tr><td>Participation à un réseau LAEP</td><td>{{ "Oui" if fiche.reseau_laep else "Non" }}</td></tr>
+        <tr><td>Comité de pilotage constitué</td><td>{{ "Oui" if fiche.comite_pilotage else "Non" }}</td></tr>
     </tbody>
 </table>
 
@@ -153,7 +154,7 @@
 
 {% else %}
 <p class="texte-secondaire">
-    Aucune fiche d'identite renseignee pour {{ annee }}.
+    Aucune fiche d'identité renseignée pour {{ annee }}.
     <a href="/bilan/fiche?annee={{ annee }}">Renseigner la fiche</a>.
 </p>
 {% endif %}
@@ -163,8 +164,8 @@
 <section class="parametres-section">
     <h2>Import</h2>
     <p class="note">
-        Remplacer les donnees de pointage par un fichier Excel. Une copie de sauvegarde
-        est automatiquement conservee avant remplacement.
+        Remplacer les données de pointage par un fichier Excel. Une copie de sauvegarde
+        est automatiquement conservée avant remplacement.
     </p>
     <a href="/importer" class="bouton-primaire">Importer un fichier Excel</a>
 </section>

@@ -13,45 +13,37 @@
             <h1>Fée Mazine — Pointage des passages</h1>
         </div>
         <nav>
-            <!-- Menu deroulant Familles -->
-            <div class="nav-dropdown">
-                <button class="nav-dropdown-bouton {{ 'actif' if actif == 'familles' }}">
-                    Familles
-                    <span class="nav-dropdown-fleche">&#9662;</span>
-                </button>
-                <div class="nav-dropdown-contenu">
-                    <a href="/" class="{{ 'actif' if sousnav == 'pointage' }}">Pointage</a>
-                    <a href="/cartes/" class="{{ 'actif' if sousnav == 'gestion' }}">Gestion des cartes</a>
-                </div>
-            </div>
+            <a href="/" class="nav-lien {{ 'actif' if actif == 'pointage' }}">Pointer</a>
+            <a href="/cartes/" class="nav-lien {{ 'actif' if actif == 'cartes' }}">Familles</a>
 
-            <!-- Menu deroulant Fiche structure -->
+            <!-- Menu déroulant Fiche structure -->
             <div class="nav-dropdown">
                 <button class="nav-dropdown-bouton {{ 'actif' if actif == 'fiche_structure' }}">
-                    Fiche structure
+                    Équipe
                     <span class="nav-dropdown-fleche">&#9662;</span>
                 </button>
                 <div class="nav-dropdown-contenu">
-                    <a href="/bilan/fiche">Caracteristiques de la structure</a>
-                    <a href="/bilan/heures">Horaires de la structure</a>
-                    <a href="/bilan/membres">Equipe</a>
+                    <a href="/bilan/membres">Accueillantes</a>
+                    <a href="/bilan/heures">Horaires</a>
+                    <a href="/heures/" class="{{ 'actif' if actif == 'heures' }}">Mes heures</a>
                 </div>
             </div>
 
-            <!-- Menu deroulant Rapport -->
+            <!-- Menu déroulant Bilan -->
             <div class="nav-dropdown">
-                <button class="nav-dropdown-bouton {{ 'actif' if actif in ('statistiques','importer','bilan') }}">
-                    Rapport
+                <button class="nav-dropdown-bouton {{ 'actif' if actif in ('statistiques','importer','bilan','fiche_structure') }}">
+                    Bilan
                     <span class="nav-dropdown-fleche">&#9662;</span>
                 </button>
                 <div class="nav-dropdown-contenu">
                     <a href="/statistiques" class="{{ 'actif' if actif == 'statistiques' }}">Statistiques</a>
-                    <a href="/bilan/" class="{{ 'actif' if actif == 'bilan' }}">Synthese</a>
+                    <a href="/bilan/" class="{{ 'actif' if actif == 'bilan' }}">Synthèse CAF</a>
+                    <a href="/bilan/fiche">Fiche structure</a>
                 </div>
             </div>
-            <a href="/heures/" class="nav-lien {{ 'actif' if actif == 'heures' }}">Gestion des récupérations</a>
 
             {% if request.state.est_admin %}
+            <a href="/parametres" class="nav-lien {{ 'actif' if actif == 'parametres' }}">Paramètres</a>
             <a href="/admin/utilisateurs" class="nav-lien {{ 'actif' if actif == 'admin_utilisateurs' }}">Admin</a>
             {% endif %}
 

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block titre %}Statistiques — Fee Mazine{% endblock %}
+{% block titre %}Statistiques — Fée Mazine{% endblock %}
 {% block contenu %}
 
 <form method="get" action="/statistiques" class="filtres">
     <label>Du <input type="date" name="debut" value="{{ debut }}"></label>
     <label>Au <input type="date" name="fin" value="{{ fin }}"></label>
     <button type="submit" class="bouton-primaire">Filtrer</button>
-    <a href="/statistiques" class="bouton-tertiaire">Reinitialiser</a>
+    <a href="/statistiques" class="bouton-tertiaire">Réinitialiser</a>
 </form>
 
 <section class="resume-rapide">
@@ -17,7 +17,7 @@
 </section>
 
 {% if stats.passages_carte > 0 or stats.familles_carte > 0 %}
-<h2>Repartition par mode</h2>
+<h2>Répartition par mode</h2>
 <table>
     <thead><tr><th>Mode</th><th>Passages</th></tr></thead>
     <tbody>
@@ -28,8 +28,8 @@
 
 <h2>Familles distinctes (cartes)</h2>
 <p class="note">
-    Nombre de cartes distinctes ayant enregistre au moins un passage sur la periode.
-    Les familles comptees en mode anonyme ne sont pas incluses (approximation declarative uniquement).
+    Nombre de cartes distinctes ayant enregistré au moins un passage sur la période.
+    Les familles comptées en mode anonyme ne sont pas incluses (approximation déclarative uniquement).
 </p>
 <section class="resume-rapide">
     <div class="carte"><span class="valeur">{{ stats.familles_carte }}</span><span class="etiquette">Familles (cartes)</span></div>
@@ -37,14 +37,14 @@
 
 {% if stats_cartes %}
 <section class="resume-rapide">
-    <div class="carte"><span class="valeur">{{ stats_cartes.parents_differents_approx }}</span><span class="etiquette">Parents differents (approx.)</span></div>
+    <div class="carte"><span class="valeur">{{ stats_cartes.parents_differents_approx }}</span><span class="etiquette">Parents différents (approx.)</span></div>
     <div class="carte"><span class="valeur">{{ stats_cartes.cartes_actives_total }}</span><span class="etiquette">Cartes actives (total)</span></div>
 </section>
 
 {% if stats_cartes.tranches_age %}
-<h2>Tranches d'age (enfants des cartes actives)</h2>
+<h2>Tranches d'âge (enfants des cartes actives)</h2>
 <p class="note">
-    Calculees dynamiquement a la date du jour si une date de naissance est disponible.
+    Calculées dynamiquement à la date du jour si une date de naissance est disponible.
 </p>
 <table>
     <thead><tr><th>Tranche</th><th>Enfants</th></tr></thead>
@@ -60,22 +60,22 @@
 
 <h2>Nouvelles familles</h2>
 <table>
-    <thead><tr><th>Reponse</th><th>Passages</th></tr></thead>
+    <thead><tr><th>Réponse</th><th>Passages</th></tr></thead>
     <tbody>
         <tr><td>Oui</td><td>{{ stats.nouvelles_familles.Oui }}</td></tr>
         <tr><td>Non</td><td>{{ stats.nouvelles_familles.Non }}</td></tr>
-        <tr><td>Non renseigne</td><td>{{ stats.nouvelles_familles["Non renseigne"] }}</td></tr>
+        <tr><td>Non renseigné</td><td>{{ stats.nouvelles_familles["Non renseigne"] }}</td></tr>
     </tbody>
 </table>
 
-<h2>Par annee</h2>
+<h2>Par année</h2>
 <table>
-    <thead><tr><th>Annee</th><th>Passages</th></tr></thead>
+    <thead><tr><th>Année</th><th>Passages</th></tr></thead>
     <tbody>
         {% for periode, total in stats.par_annee.items() %}
         <tr><td>{{ periode }}</td><td>{{ total }}</td></tr>
         {% else %}
-        <tr><td colspan="2">Aucun passage enregistre sur cette periode.</td></tr>
+        <tr><td colspan="2">Aucun passage enregistré sur cette période.</td></tr>
         {% endfor %}
     </tbody>
 </table>
@@ -87,7 +87,7 @@
         {% for periode, total in stats.par_mois.items() %}
         <tr><td>{{ periode }}</td><td>{{ total }}</td></tr>
         {% else %}
-        <tr><td colspan="2">Aucun passage enregistre sur cette periode.</td></tr>
+        <tr><td colspan="2">Aucun passage enregistré sur cette période.</td></tr>
         {% endfor %}
     </tbody>
 </table>
@@ -100,7 +100,7 @@
             {% for periode, total in stats.par_semaine.items() %}
             <tr><td>{{ periode }}</td><td>{{ total }}</td></tr>
             {% else %}
-            <tr><td colspan="2">Aucun passage enregistre sur cette periode.</td></tr>
+            <tr><td colspan="2">Aucun passage enregistré sur cette période.</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -114,7 +114,7 @@
             {% for periode, total in stats.par_jour.items() %}
             <tr><td>{{ periode }}</td><td>{{ total }}</td></tr>
             {% else %}
-            <tr><td colspan="2">Aucun passage enregistre sur cette periode.</td></tr>
+            <tr><td colspan="2">Aucun passage enregistré sur cette période.</td></tr>
             {% endfor %}
         </tbody>
     </table>

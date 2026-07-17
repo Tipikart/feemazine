@@ -5,7 +5,7 @@
 {% include "heures/_sousnav.html" %}
 
 <h2>Mes horaires de travail</h2>
-<p class="description">Declarer mes horaires de travail pour la journee en cours.</p>
+<p class="description">Déclarer mes horaires de travail pour la journée en cours.</p>
 <form method="post" action="/heures/declarer" class="formulaire-horaire">
     <label>Date
         <input type="date" name="date_saisie" value="{{ aujourdhui }}" min="{{ date_min }}" max="{{ date_max }}" required>

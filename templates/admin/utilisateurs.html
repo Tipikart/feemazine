@@ -57,7 +57,7 @@
                         {% if responsable_id == m.id %}
                         Retirer
                         {% else %}
-                        Designer responsable
+                        Désigner responsable
                         {% endif %}
                     </button>
                 </form>
@@ -70,11 +70,11 @@
 <hr style="margin: 3rem 0; border: none; border-top: 2px dashed #e74c3c;">
 
 <h3 style="color: #e74c3c;">⚠ Zone de test</h3>
-<p style="margin-bottom: 1rem;">Supprime toutes les donnees operationnelles (pointages, heures CAF, declarations de recuperation) sans toucher aux membres, taux horaires et parametres.</p>
+<p style="margin-bottom: 1rem;">Supprime toutes les données opérationnelles (pointages, heures CAF, déclarations de récupération) sans toucher aux membres, taux horaires et paramètres.</p>
 
-<form method="post" action="/admin/reset-donnees" onsubmit="return confirm('Confirmer la suppression de toutes les donnees de test ? Les membres et les taux horaires seront conserves.')">
+<form method="post" action="/admin/reset-donnees" onsubmit="return confirm('Confirmer la suppression de toutes les données de test ? Les membres et les taux horaires seront conservés.')">
     <button type="submit" class="bouton-danger" style="background:#e74c3c;color:#fff;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;font-size:0.95rem;">
-        🗑 Reinitialiser les donnees de test
+        🗑 Réinitialiser les données de test
     </button>
 </form>
 

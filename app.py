@@ -135,9 +135,7 @@ def afficher_formulaire(request: Request, erreur: str | None = None, confirmatio
             "erreur": erreur,
             "confirmation": confirmation,
             "stats": resume_rapide(),
-            "infos": _infos_fichier(),
-            "parametres": _parametres_pour_gabarit(),
-            "actif": "familles",
+            "actif": "pointage",
             "sousnav": "pointage",
             "aucune_heure_aujourdhui": len(heures_auj) == 0,
             "est_responsable": est_responsable,
@@ -180,10 +178,8 @@ def valider_passage(
                 "erreur": erreur,
                 "confirmation": None,
                 "stats": resume_rapide(),
-                "infos": _infos_fichier(),
-                "parametres": _parametres_pour_gabarit(),
-                "actif": "familles",
-            "sousnav": "pointage",
+                "actif": "pointage",
+                "sousnav": "pointage",
             },
         )
 
@@ -197,10 +193,8 @@ def valider_passage(
                 "erreur": f"{erreur_verrou} Fermez-le puis réessayez.",
                 "confirmation": None,
                 "stats": resume_rapide(),
-                "infos": _infos_fichier(),
-                "parametres": _parametres_pour_gabarit(),
-                "actif": "familles",
-            "sousnav": "pointage",
+                "actif": "pointage",
+                "sousnav": "pointage",
             },
         )
 
@@ -280,6 +274,21 @@ async def declarer_journee(request: Request):
     return _rediriger_avec_message("/", confirmation="Horaires de la journee enregistres.")
 
 
+@app.get("/parametres", response_class=HTMLResponse)
+def afficher_parametres(request: Request, erreur: str | None = None, confirmation: str | None = None):
+    return templates.TemplateResponse(
+        request,
+        "parametres.html",
+        {
+            "erreur": erreur,
+            "confirmation": confirmation,
+            "infos": _infos_fichier(),
+            "parametres": _parametres_pour_gabarit(),
+            "actif": "parametres",
+        },
+    )
+
+
 @app.get("/statistiques", response_class=HTMLResponse)
 def afficher_statistiques(
     request: Request,
@@ -339,12 +348,12 @@ def partager_par_email():
     try:
         envoyer_par_email()
     except (FileNotFoundError, PartageNonConfigure) as erreur:
-        return _rediriger_avec_message("/", erreur=str(erreur))
+        return _rediriger_avec_message("/parametres", erreur=str(erreur))
     except Exception as erreur:
-        return _rediriger_avec_message("/", erreur=f"Échec de l'envoi par email : {erreur}")
+        return _rediriger_avec_message("/parametres", erreur=f"Échec de l'envoi par email : {erreur}")
 
     suivi.enregistrer_partage("email")
-    return _rediriger_avec_message("/", confirmation="Fichier envoyé par email à l'équipe.")
+    return _rediriger_avec_message("/parametres", confirmation="Fichier envoyé par email à l'équipe.")
 
 
 @app.post("/partager/drive")
@@ -352,12 +361,12 @@ def partager_vers_drive():
     try:
         envoyer_vers_google_drive()
     except (FileNotFoundError, PartageNonConfigure) as erreur:
-        return _rediriger_avec_message("/", erreur=str(erreur))
+        return _rediriger_avec_message("/parametres", erreur=str(erreur))
     except Exception as erreur:
-        return _rediriger_avec_message("/", erreur=f"Échec de l'envoi vers Google Drive : {erreur}")
+        return _rediriger_avec_message("/parametres", erreur=f"Échec de l'envoi vers Google Drive : {erreur}")
 
     suivi.enregistrer_partage("Google Drive")
-    return _rediriger_avec_message("/", confirmation="Fichier envoyé vers Google Drive.")
+    return _rediriger_avec_message("/parametres", confirmation="Fichier envoyé vers Google Drive.")
 
 
 @app.post("/parametres/email")
@@ -376,12 +385,12 @@ def enregistrer_parametres_email(
     try:
         envoyer_par_email()
     except PartageNonConfigure as erreur:
-        return _rediriger_avec_message("/", erreur=str(erreur))
+        return _rediriger_avec_message("/parametres", erreur=str(erreur))
     except Exception as erreur:
-        return _rediriger_avec_message("/", erreur=f"Paramètres enregistrés, mais l'envoi a échoué : {erreur}")
+        return _rediriger_avec_message("/parametres", erreur=f"Paramètres enregistrés, mais l'envoi a échoué : {erreur}")
 
     suivi.enregistrer_partage("email")
-    return _rediriger_avec_message("/", confirmation="Paramètres enregistrés et fichier envoyé par email à l'équipe.")
+    return _rediriger_avec_message("/parametres", confirmation="Paramètres enregistrés et fichier envoyé par email à l'équipe.")
 
 
 @app.post("/parametres/drive")
@@ -391,7 +400,7 @@ def enregistrer_parametres_drive(
 ):
     parametres.enregistrer_parametres_drive(google_drive_dossier_id.strip(), google_drive_identifiants.strip())
     return _rediriger_avec_message(
-        "/",
+        "/parametres",
         confirmation="Paramètres Google Drive enregistrés. L'envoi automatique sera disponible dans une prochaine version.",
     )
 

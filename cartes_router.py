@@ -87,23 +87,17 @@ def afficher_gestion(
     nb_actives = session.query(Carte).filter(Carte.actif.is_(True)).count()
     nb_inactives = session.query(Carte).filter(Carte.actif.is_(False)).count()
 
-    from app import _infos_fichier, _parametres_pour_gabarit
-    from statistiques import resume_rapide
-
     return templates.TemplateResponse(
         request,
         "cartes/gestion.html",
         {
             "erreur": erreur,
             "confirmation": confirmation,
-            "actif": "familles",
+            "actif": "cartes",
             "sousnav": "gestion",
             "nb_actives": nb_actives,
             "nb_inactives": nb_inactives,
             "duree_purge": parametres.duree_purge_cartes_mois,
-            "stats": resume_rapide(),
-            "infos": _infos_fichier(),
-            "parametres": _parametres_pour_gabarit(),
         },
     )
 

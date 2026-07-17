@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block titre %}Accueillants — Fee Mazine{% endblock %}
+{% block titre %}Équipe — Fée Mazine{% endblock %}
 {% block contenu %}
 
 <nav class="sousnav">
-    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Caracteristiques de la structure</a>
-    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Horaires de la structure</a>
-    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Equipe</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Caractéristiques</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Horaires</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Équipe</a>
 </nav>
 
-<p class="texte-secondaire">Les accueillants sont les membres créés depuis la page <a href="/admin/utilisateurs">Administration</a>.</p>
+<p class="texte-secondaire">Les accueillantes sont les membres créés depuis la page <a href="/admin/utilisateurs">Administration</a>.</p>
 
-<h2>Accueillants</h2>
+<h2>Accueillantes</h2>
 
 {% if accueillants %}
 <table>
@@ -18,7 +18,7 @@
         <tr>
             <th>Nom</th>
             <th>Email</th>
-            <th>Role</th>
+            <th>Rôle</th>
             <th>Statut</th>
             <th></th>
         </tr>
@@ -39,7 +39,7 @@
             <td>
                 <form method="post" action="/bilan/membres/basculer/{{ a.id }}" class="action-inline">
                     <button type="submit" class="bouton-tertiaire">
-                        {{ "Desactiver" if a.actif else "Reactiver" }}
+                        {{ "Désactiver" if a.actif else "Réactiver" }}
                     </button>
                 </form>
             </td>
@@ -48,12 +48,12 @@
     </tbody>
 </table>
 {% else %}
-<p class="texte-secondaire">Aucun accueillant enregistre. Créez des utilisateurs depuis la page <a href="/admin/utilisateurs">Administration</a>.</p>
+<p class="texte-secondaire">Aucune accueillante enregistrée. Créez des utilisateurs depuis la page <a href="/admin/utilisateurs">Administration</a>.</p>
 {% endif %}
 
 <p class="note">
-    Les accueillants desactives ne sont plus proposes dans le formulaire de saisie
-    des heures mais leurs heures deja enregistrees sont conservees.
+    Les accueillantes désactivées ne sont plus proposées dans le formulaire de saisie
+    des heures mais leurs heures déjà enregistrées sont conservées.
 </p>
 
 {% endblock %}
