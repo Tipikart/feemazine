@@ -21,6 +21,7 @@ VALEURS_PAR_DEFAUT = {
     "email_destinataires": [],
     "google_drive_dossier_id": "",
     "google_drive_identifiants": "",
+    "responsable_horaires_id": None,
 }
 
 
@@ -65,3 +66,14 @@ def email_configure() -> bool:
 def drive_configure() -> bool:
     p = lire_parametres()
     return bool(p["google_drive_dossier_id"] and p["google_drive_identifiants"])
+
+
+def designer_responsable_horaires(membre_id: int | None) -> None:
+    """Definit (ou retire) le responsable du remplissage du popup horaires."""
+    donnees = lire_parametres()
+    donnees["responsable_horaires_id"] = membre_id
+    _ecrire(donnees)
+
+
+def obtenir_responsable_horaires_id() -> int | None:
+    return lire_parametres().get("responsable_horaires_id")

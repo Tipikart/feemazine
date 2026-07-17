@@ -2,6 +2,71 @@
 {% block titre %}Pointage — Fee Mazine{% endblock %}
 {% block contenu %}
 
+<h2>Nouveau passage</h2>
+
+<div class="choix-mode">
+    <button type="button" class="bouton-mode actif" id="btn-mode-carte" onclick="choisirMode('carte')">Entrer un code famille</button>
+    <button type="button" class="bouton-mode" id="btn-mode-anonyme" onclick="choisirMode('anonyme')">Passage sans code</button>
+</div>
+
+<div id="section-carte" class="section-mode">
+    <form method="post" action="/passage-carte" class="formulaire-carte-passage">
+        <label>Code de la carte
+            <input type="text" name="code" placeholder="XXXX-XXXX-XXXX" required
+                   style="text-transform: uppercase; letter-spacing: 0.1em; font-family: ui-monospace, monospace; font-size: 1.1rem;">
+        </label>
+        <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer le passage</button>
+        <div class="carte-attribution">
+            <p class="carte-attribution-texte">
+                <strong>La famille n'a pas de code ?</strong>
+            </p>
+            <a href="/cartes/attribuer" class="bouton-primaire carte-attribution-bouton">
+                &#43; Attribuer une nouvelle carte
+            </a>
+        </div>
+    </form>
+</div>
+
+<div id="section-anonyme" class="section-mode" style="display: none;">
+    <form method="post" action="/">
+        <div class="compteur">
+            <span>Adultes presents</span>
+            <div class="boutons">
+                <button type="button" onclick="modifierCompteur('adultes', -1)" aria-label="Retirer un adulte">-</button>
+                <span class="valeur" id="valeur-adultes">0</span>
+                <button type="button" onclick="modifierCompteur('adultes', 1)" aria-label="Ajouter un adulte">+</button>
+            </div>
+        </div>
+        <input type="hidden" name="adultes" id="input-adultes" value="0">
+
+        <div class="compteur">
+            <span>Enfants presents</span>
+            <div class="boutons">
+                <button type="button" onclick="modifierCompteur('enfants', -1)" aria-label="Retirer un enfant">-</button>
+                <span class="valeur" id="valeur-enfants">0</span>
+                <button type="button" onclick="modifierCompteur('enfants', 1)" aria-label="Ajouter un enfant">+</button>
+            </div>
+        </div>
+        <input type="hidden" name="enfants" id="input-enfants" value="0">
+
+        <fieldset>
+            <legend>Nouvelle famille aujourd'hui</legend>
+            <label><input type="radio" name="nouvelle_famille" value="Oui"> Oui</label>
+            <label><input type="radio" name="nouvelle_famille" value="Non"> Non</label>
+            <label><input type="radio" name="nouvelle_famille" value="Non renseigne" checked> Non renseigne</label>
+        </fieldset>
+
+        <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Valider ce passage</button>
+    </form>
+</div>
+
+<section class="resume-rapide">
+    <div class="carte"><span class="valeur">{{ stats.aujourdhui }}</span><span class="etiquette">Aujourd'hui</span></div>
+    <div class="carte"><span class="valeur">{{ stats.semaine }}</span><span class="etiquette">Cette semaine</span></div>
+    <div class="carte"><span class="valeur">{{ stats.mois }}</span><span class="etiquette">Ce mois-ci</span></div>
+    <div class="carte"><span class="valeur">{{ stats.annee }}</span><span class="etiquette">Cette annee</span></div>
+</section>
+
 <section class="actions-fichier">
     <span class="etiquette-section">Partager avec l'equipe :</span>
 
@@ -23,6 +88,22 @@
 
     <button type="button" class="bouton-tertiaire" onclick="ouvrirModale('modale-email')">&#9881; Reglages email</button>
     <button type="button" class="bouton-tertiaire" onclick="ouvrirModale('modale-drive')">&#9881; Reglages Drive</button>
+</section>
+
+<section class="infos-fichier">
+    <div class="actions-fichier actions-fichier-imbriquee">
+        <form method="post" action="/ouvrir" class="action-inline">
+            <button type="submit" class="bouton-secondaire">Ouvrir le fichier Excel</button>
+        </form>
+        <a href="/export" class="bouton-secondaire">Exporter le fichier Excel</a>
+        <a href="/importer" class="bouton-secondaire">Importer un fichier Excel</a>
+    </div>
+    <p>Derniere modification : <strong>{{ infos.derniere_modification }}</strong></p>
+    <p>Dernier export : <strong>{{ infos.dernier_export }}</strong></p>
+    <p>
+        Dernier partage : <strong>{{ infos.dernier_partage }}</strong>
+        {% if infos.dernier_partage_moyen %}<span class="etiquette-section">({{ infos.dernier_partage_moyen }})</span>{% endif %}
+    </p>
 </section>
 
 <div class="modale-fond" id="modale-email">
@@ -77,82 +158,163 @@
     </div>
 </div>
 
-<section class="infos-fichier">
-    <div class="actions-fichier actions-fichier-imbriquee">
-        <form method="post" action="/ouvrir" class="action-inline">
-            <button type="submit" class="bouton-secondaire">Ouvrir le fichier Excel</button>
+{% if aucune_heure_aujourdhui and est_responsable %}
+<div class="modale-fond modale-visible" id="modale-declarer-journee">
+    <div class="modale" style="max-width: 500px;">
+        <div class="modale-entete">
+            <h2>Horaires de la journee</h2>
+        </div>
+
+        <form id="form-declarer-journee" method="post" action="/declarer-journee" style="margin:0;">
+
+            {# Etape 1 : Ouverture au public #}
+            <div class="etape-declaration" id="etape-1">
+                <p class="question-declaration"><strong>Y a-t-il une ouverture au public aujourd'hui ?</strong></p>
+                <div class="choix-oui-non">
+                    <button type="button" class="bouton-choix" data-choix="oui" data-cible="oui-ouverture">Oui</button>
+                    <button type="button" class="bouton-choix" data-choix="non">Non</button>
+                </div>
+                <div class="sous-champs" id="oui-ouverture" style="display:none;">
+                    <div class="champs-heures">
+                        <label>Debut <input type="time" name="ouverture_debut" value="08:00"></label>
+                        <label>Fin <input type="time" name="ouverture_fin" value="17:00"></label>
+                    </div>
+                </div>
+                <input type="hidden" name="ouverture_checked" value="0">
+                <button type="button" class="bouton-primaire etape-suivante" data-verse="etape-2"
+                        style="margin-top:1rem;float:right;">Suivant</button>
+                <div style="clear:both;"></div>
+            </div>
+
+            {# Etape 2 : Preparation / rangement / debriefing #}
+            <div class="etape-declaration" id="etape-2" style="display:none;">
+                <p class="question-declaration"><strong>Y a-t-il un temps de preparation, rangement, debriefing ?</strong></p>
+                <div class="choix-oui-non">
+                    <button type="button" class="bouton-choix" data-choix="oui" data-cible="oui-preparation">Oui</button>
+                    <button type="button" class="bouton-choix" data-choix="non">Non</button>
+                </div>
+                <div class="sous-champs" id="oui-preparation" style="display:none;">
+                    <label>Duree <input type="number" name="preparation_duree" min="5" value="30" style="width:80px;"> minutes</label>
+                </div>
+                <input type="hidden" name="preparation_checked" value="0">
+                <button type="button" class="bouton-secondaire etape-precedente" data-verse="etape-1">Precedent</button>
+                <button type="button" class="bouton-primaire etape-suivante" data-verse="etape-3"
+                        style="float:right;">Suivant</button>
+                <div style="clear:both;"></div>
+            </div>
+
+            {# Etape 3 : Analyse des pratiques / supervision #}
+            <div class="etape-declaration" id="etape-3" style="display:none;">
+                <p class="question-declaration"><strong>Y a-t-il une analyse des pratiques / supervision ?</strong></p>
+                <div class="choix-oui-non">
+                    <button type="button" class="bouton-choix" data-choix="oui" data-cible="oui-analyse">Oui</button>
+                    <button type="button" class="bouton-choix" data-choix="non">Non</button>
+                </div>
+                <div class="sous-champs" id="oui-analyse" style="display:none;">
+                    <label>Duree <input type="number" name="analyse_duree" min="5" value="30" style="width:80px;"> minutes</label>
+                </div>
+                <input type="hidden" name="analyse_checked" value="0">
+                <button type="button" class="bouton-secondaire etape-precedente" data-verse="etape-2">Precedent</button>
+                <button type="button" class="bouton-primaire etape-suivante" data-verse="etape-4"
+                        style="float:right;">Suivant</button>
+                <div style="clear:both;"></div>
+            </div>
+
+            {# Etape 4 : Reunion d'equipe / reseau #}
+            <div class="etape-declaration" id="etape-4" style="display:none;">
+                <p class="question-declaration"><strong>Y a-t-il une reunion d'equipe / reseau ?</strong></p>
+                <div class="choix-oui-non">
+                    <button type="button" class="bouton-choix" data-choix="oui" data-cible="oui-reunion">Oui</button>
+                    <button type="button" class="bouton-choix" data-choix="non">Non</button>
+                </div>
+                <div class="sous-champs" id="oui-reunion" style="display:none;">
+                    <label>Duree <input type="number" name="reunion_duree" min="5" value="30" style="width:80px;"> minutes</label>
+                </div>
+                <input type="hidden" name="reunion_checked" value="0">
+                <button type="button" class="bouton-secondaire etape-precedente" data-verse="etape-3">Precedent</button>
+                <button type="submit" class="bouton-primaire etape-valider"
+                        style="float:right;">Enregistrer</button>
+                <div style="clear:both;"></div>
+            </div>
+
         </form>
-        <a href="/export" class="bouton-secondaire">Exporter le fichier Excel</a>
-        <a href="/importer" class="bouton-secondaire">Importer un fichier Excel</a>
     </div>
-    <p>Derniere modification : <strong>{{ infos.derniere_modification }}</strong></p>
-    <p>Dernier export : <strong>{{ infos.dernier_export }}</strong></p>
-    <p>
-        Dernier partage : <strong>{{ infos.dernier_partage }}</strong>
-        {% if infos.dernier_partage_moyen %}<span class="etiquette-section">({{ infos.dernier_partage_moyen }})</span>{% endif %}
-    </p>
-</section>
-
-<section class="resume-rapide">
-    <div class="carte"><span class="valeur">{{ stats.aujourdhui }}</span><span class="etiquette">Aujourd'hui</span></div>
-    <div class="carte"><span class="valeur">{{ stats.semaine }}</span><span class="etiquette">Cette semaine</span></div>
-    <div class="carte"><span class="valeur">{{ stats.mois }}</span><span class="etiquette">Ce mois-ci</span></div>
-    <div class="carte"><span class="valeur">{{ stats.annee }}</span><span class="etiquette">Cette annee</span></div>
-</section>
-
-<h2>Nouveau passage</h2>
-
-<div class="choix-mode">
-    <button type="button" class="bouton-mode actif" id="btn-mode-carte" onclick="choisirMode('carte')">Scanner une carte</button>
-    <button type="button" class="bouton-mode" id="btn-mode-anonyme" onclick="choisirMode('anonyme')">Passage sans carte</button>
 </div>
-
-<div id="section-carte" class="section-mode">
-    <form method="post" action="/passage-carte" class="formulaire-carte-passage">
-        <label>Code de la carte
-            <input type="text" name="code" placeholder="XXXX-XXXX-XXXX" required
-                   style="text-transform: uppercase; letter-spacing: 0.1em; font-family: ui-monospace, monospace; font-size: 1.1rem;">
-        </label>
-        <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Enregistrer le passage</button>
-        <p class="note" style="margin-top: 8px; text-align: center;">
-            La famille n'a pas de carte ?
-            <a href="/cartes/attribuer">Attribuer une nouvelle carte</a>
-        </p>
-    </form>
-</div>
-
-<div id="section-anonyme" class="section-mode" style="display: none;">
-    <form method="post" action="/">
-        <div class="compteur">
-            <span>Adultes presents</span>
-            <div class="boutons">
-                <button type="button" onclick="modifierCompteur('adultes', -1)" aria-label="Retirer un adulte">-</button>
-                <span class="valeur" id="valeur-adultes">0</span>
-                <button type="button" onclick="modifierCompteur('adultes', 1)" aria-label="Ajouter un adulte">+</button>
-            </div>
+{% elif heures_aujourdhui %}
+<div class="modale-fond modale-visible" id="modale-resume-journee">
+    <div class="modale" style="max-width: 460px;">
+        <div class="modale-entete">
+            <h2>Horaires d'aujourd'hui</h2>
         </div>
-        <input type="hidden" name="adultes" id="input-adultes" value="0">
-
-        <div class="compteur">
-            <span>Enfants presents</span>
-            <div class="boutons">
-                <button type="button" onclick="modifierCompteur('enfants', -1)" aria-label="Retirer un enfant">-</button>
-                <span class="valeur" id="valeur-enfants">0</span>
-                <button type="button" onclick="modifierCompteur('enfants', 1)" aria-label="Ajouter un enfant">+</button>
-            </div>
-        </div>
-        <input type="hidden" name="enfants" id="input-enfants" value="0">
-
-        <fieldset>
-            <legend>Nouvelle famille aujourd'hui</legend>
-            <label><input type="radio" name="nouvelle_famille" value="Oui"> Oui</label>
-            <label><input type="radio" name="nouvelle_famille" value="Non"> Non</label>
-            <label><input type="radio" name="nouvelle_famille" value="Non renseigne" checked> Non renseigne</label>
-        </fieldset>
-
-        <button type="submit" class="bouton-primaire bouton-primaire-pleine-largeur">Valider ce passage</button>
-    </form>
+        <ul class="liste-resume" style="list-style:none;padding:0;margin:0 0 1rem;">
+            {% for h in heures_aujourdhui %}
+            <li style="padding:0.5rem 0;border-bottom:1px solid #eee;">
+                <strong>{{ h.libelle }}</strong>
+                {% if h.heure_debut and h.heure_fin %}
+                <br><span style="color:#666;">{{ h.heure_debut }} — {{ h.heure_fin }}</span>
+                {% elif h.duree_minutes %}
+                <br><span style="color:#666;">{{ h.duree_minutes }} min</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="bouton-primaire bouton-primaire-pleine-largeur"
+                onclick="document.getElementById('modale-resume-journee').classList.remove('modale-visible');">
+            Fermer
+        </button>
+    </div>
 </div>
+{% endif %}
+
+<script>
+    // Navigation entre etapes du wizard de declaration
+    document.addEventListener('click', function(e) {
+        // Boutons Oui/Non
+        var choix = e.target.closest('.bouton-choix');
+        if (choix) {
+            var etape = choix.closest('.etape-declaration');
+            // Desactiver l'autre bouton
+            etape.querySelectorAll('.bouton-choix').forEach(function(b) {
+                b.classList.remove('actif');
+            });
+            choix.classList.add('actif');
+            var cible = choix.dataset.cible;
+            var checked = choix.dataset.choix === 'oui' ? '1' : '0';
+            etape.querySelector('input[type=hidden]').value = checked;
+            // Afficher/cacher les sous-champs
+            etape.querySelectorAll('.sous-champs').forEach(function(s) {
+                s.style.display = 'none';
+            });
+            if (cible) {
+                document.getElementById(cible).style.display = '';
+            }
+        }
+
+        // Bouton Suivant
+        var suivant = e.target.closest('.etape-suivante');
+        if (suivant) {
+            var cible = suivant.dataset.verse;
+            document.getElementById(cible).style.display = '';
+            suivant.closest('.etape-declaration').style.display = 'none';
+        }
+
+        // Bouton Precedent
+        var precedent = e.target.closest('.etape-precedente');
+        if (precedent) {
+            var cible = precedent.dataset.verse;
+            document.getElementById(cible).style.display = '';
+            precedent.closest('.etape-declaration').style.display = 'none';
+        }
+    });
+
+    // Fermeture du resume au clic sur le fond
+    document.addEventListener('click', function(e) {
+        var modale = e.target.closest('#modale-resume-journee');
+        if (modale && e.target === modale) {
+            modale.classList.remove('modale-visible');
+        }
+    });
+</script>
 
 <script>
     function modifierCompteur(nom, delta) {

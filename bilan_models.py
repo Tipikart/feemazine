@@ -59,6 +59,8 @@ class HeureActivite(Base):
     date = Column(Date, nullable=False)
     type = Column(String, nullable=False)
     duree_minutes = Column(Integer, nullable=False)
+    heure_debut = Column(String, nullable=True)  # HH:MM
+    heure_fin = Column(String, nullable=True)    # HH:MM
 
     accueillant = relationship("Accueillant", back_populates="heures")
 

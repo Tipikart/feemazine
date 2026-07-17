@@ -3,10 +3,9 @@
 {% block contenu %}
 
 <nav class="sousnav">
-    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthese</a>
-    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Heures</a>
-    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Accueillants</a>
-    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Fiche structure</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Caracteristiques de la structure</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Horaires de la structure</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Equipe</a>
 </nav>
 
 <form method="get" action="/bilan/fiche" class="filtres" style="margin-bottom: 20px;">

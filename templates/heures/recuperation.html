@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block titre %}Demandes en cours — Heures{% endblock %}
+{% block contenu %}
+
+{% include "heures/_sousnav.html" %}
+
+<h2>Demandes de récupération</h2>
+<p class="texte-secondaire">
+    Chaque membre peut voter sur les demandes des autres. Une demande est
+    tranchée dès qu'elle atteint la majorité simple (<strong>{{ seuil_majorite }} voix</strong>),
+    que ce soit en validation ou en refus.
+</p>
+
+{% if demandes %}
+<div class="recup-liste">
+    {% for d in demandes %}
+    <div class="recup-carte">
+        <div class="recup-entete">
+            <strong>{{ d.demandeur_nom }}</strong>
+            <span class="recup-date">{{ d.date_recup_affichage }}</span>
+            <span class="recup-duree">{{ d.demande.duree_heures }} h</span>
+            <span class="recup-statut etiquette-statut
+                {% if d.demande.statut == 'validee' %}etiquette-statut-valide
+                {% elif d.demande.statut == 'refusee' %}etiquette-statut-refuse{% endif %}">
+                {{ d.demande.statut }}
+            </span>
+        </div>
+
+        <div class="recup-justification">
+            <em>{{ d.demande.justification }}</em>
+        </div>
+
+        <div class="recup-votes">
+            <span class="recup-compteur recup-valide">{{ d.nb_valide }} valide</span>
+            <span class="recup-compteur recup-refuse">{{ d.nb_refuse }} refus</span>
+            <span class="recup-date">Créée le {{ d.cree_le_affichage }}</span>
+        </div>
+
+        {% if d.validations %}
+        <div class="recup-details-votes">
+            {% for v in d.validations %}
+            <div class="recup-vote">
+                <strong>{{ v.validateur_nom }}</strong>
+                <span class="{% if v.decision == 'valide' %}texte-valide{% else %}texte-refuse{% endif %}">
+                    {{ v.decision }}
+                </span>
+                {% if v.commentaire %}— <em>{{ v.commentaire }}</em>{% endif %}
+                <span class="recup-date">({{ v.date_vote }})</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if d.peut_voter %}
+        <form method="post" action="/heures/recuperation/{{ d.demande.id }}/voter" class="recup-formulaire-vote">
+            <label>
+                Commentaire (optionnel)
+                <input type="text" name="commentaire" placeholder="Optionnel — visible par tous">
+            </label>
+            <div class="recup-boutons-vote">
+                <button type="submit" name="decision" value="valide" class="bouton-primaire">✓ Valider</button>
+                <button type="submit" name="decision" value="refuse" class="bouton-secondaire">✗ Refuser</button>
+            </div>
+        </form>
+        {% elif d.est_mien %}
+        <p class="note">Votre propre demande — vous ne pouvez pas voter.</p>
+        {% elif d.demande.statut != 'en_attente' %}
+        <p class="note">Demande déjà traitée.</p>
+        {% else %}
+        <p class="note">Vous avez déjà voté.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="texte-secondaire">Aucune demande de récupération pour le moment.</p>
+{% endif %}
+
+<h2>Votre solde</h2>
+<div class="resume-rapide">
+    <div class="carte {% if solde.solde_disponible < 0 %}carte-negatif{% endif %}">
+        <span class="valeur">{{ solde.solde_disponible }} h</span>
+        <span class="etiquette">Solde disponible</span>
+    </div>
+</div>
+<p><a href="/heures/" class="bouton-tertiaire">← Retour à mon espace</a></p>
+
+<style>
+.recup-liste { display: flex; flex-direction: column; gap: 1rem; }
+.recup-carte { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
+.recup-entete { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.recup-date { color: #666; font-size: 0.85rem; }
+.recup-duree { font-weight: 600; font-size: 1.1rem; }
+.recup-statut { margin-left: auto; }
+.recup-justification { margin-bottom: 0.5rem; padding: 0.5rem; background: #f9f9f9; border-radius: 4px; }
+.recup-votes { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem; }
+.recup-compteur { font-size: 0.9rem; font-weight: 500; }
+.recup-valide { color: #1b7a1b; }
+.recup-refuse { color: #b33; }
+.recup-details-votes { border-top: 1px solid #eee; padding-top: 0.5rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.recup-vote { font-size: 0.9rem; }
+.texte-valide { color: #1b7a1b; font-weight: 500; }
+.texte-refuse { color: #b33; font-weight: 500; }
+.recup-formulaire-vote { border-top: 1px solid #eee; padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.recup-boutons-vote { display: flex; gap: 0.5rem; }
+.carte-negatif .valeur { color: #b33; }
+.etiquette-statut-refuse { background: #fdd; color: #b33; }
+</style>
+{% endblock %}

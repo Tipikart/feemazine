@@ -6,7 +6,11 @@
 
 <h2>Membres</h2>
 <table>
-    <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Salaire actuel</th><th>Taux horaire</th><th></th></tr></thead>
+    <thead><tr>
+        <th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th>
+        <th>H. prévues/sem.</th><th>Depuis le</th>
+        <th>Total travaillé</th><th>Solde</th><th></th>
+    </tr></thead>
     <tbody>
         {% for l in lignes %}
         <tr>
@@ -14,8 +18,10 @@
             <td>{{ l.email }}</td>
             <td>{{ l.role }}</td>
             <td>{% if l.actif %}Actif{% else %}Désactivé{% endif %}</td>
-            <td>{% if l.salaire_actuel %}{{ l.salaire_actuel }} €{% else %}—{% endif %}</td>
-            <td>{% if l.taux_horaire %}{{ l.taux_horaire }} €/h{% else %}—{% endif %}</td>
+            <td>{% if l.heures_prevues %}{{ l.heures_prevues }} h{% else %}—{% endif %}</td>
+            <td>{% if l.derniere_date_effet %}{{ l.derniere_date_effet }}{% else %}—{% endif %}</td>
+            <td>{{ l.total_travaille }} h</td>
+            <td>{{ l.solde }} h</td>
             <td>
                 {% if l.actif %}
                 <form method="post" action="/heures/admin/membres/{{ l.id }}/desactiver" class="action-inline">
@@ -29,7 +35,7 @@
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="7">Aucun membre.</td></tr>
+        <tr><td colspan="9">Aucun membre.</td></tr>
         {% endfor %}
     </tbody>
 </table>
@@ -51,16 +57,20 @@
     <button type="submit" class="bouton-primaire">Ajouter</button>
 </form>
 
-<h2>Ajouter un salaire</h2>
-<p class="note">Une nouvelle ligne est ajoutée à l'historique du membre choisi ; les lignes existantes ne sont jamais modifiées.</p>
-<form method="post" action="/heures/admin/salaires" class="formulaire-horaire">
+<h2>Définir les heures prévues</h2>
+<p class="note">
+    Ajoute une entrée dans l'historique des heures prévues pour un membre.
+    La valeur active pour une semaine est celle dont la date d'effet est la
+    plus récente antérieure au premier jour de cette semaine.
+</p>
+<form method="post" action="/heures/admin/heures-prevues" class="formulaire-horaire">
     <label>Membre
         <select name="membre_id" required>
             {% for l in lignes %}<option value="{{ l.id }}">{{ l.nom }}</option>{% endfor %}
         </select>
     </label>
-    <label>Salaire brut mensuel (€)
-        <input type="number" step="0.01" min="0" name="salaire_brut_mensuel" required>
+    <label>Heures par semaine
+        <input type="number" step="0.5" min="0" name="heures_par_semaine" required placeholder="ex. 35">
     </label>
     <label>Date d'effet
         <input type="date" name="date_effet" required>
@@ -68,13 +78,11 @@
     <button type="submit" class="bouton-primaire">Enregistrer</button>
 </form>
 
-<h2>Seuil de validation</h2>
-<p class="note">Nombre de validations distinctes nécessaires pour qu'un horaire déclaré passe au statut "validé".</p>
-<form method="post" action="/heures/admin/parametres" class="formulaire-horaire">
-    <label>Validations requises
-        <input type="number" min="1" name="seuil_validation" value="{{ seuil_validation }}" required>
-    </label>
-    <button type="submit" class="bouton-primaire">Mettre à jour</button>
-</form>
+<h2>Validation des demandes de récupération</h2>
+<p class="note">
+    Le système utilise une <strong>majorité simple</strong> (ceil(membres_actifs / 2)) :
+    il faut actuellement <strong>{{ seuil_majorite }} voix</strong> (valide ou refus)
+    pour qu'une demande soit définitivement tranchée.
+</p>
 
 {% endblock %}

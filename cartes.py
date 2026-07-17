@@ -17,6 +17,7 @@ Limites documentees (voir aussi README) :
 """
 
 from datetime import date, datetime
+from tz_helpers import maintenant, aujourdhui
 
 from sqlalchemy.orm import Session
 
@@ -43,9 +44,9 @@ def creer_carte(
     carte = Carte(
         id=code,
         nb_adultes=nb_adultes,
-        date_attribution=date.today(),
+        date_attribution=aujourdhui(),
         actif=True,
-        derniere_maj=datetime.now(),
+        derniere_maj=maintenant(),
     )
     session.add(carte)
 
@@ -70,7 +71,7 @@ def modifier_carte(
     session: Session, carte: Carte, nb_adultes: int, enfants_data: list[dict]
 ) -> None:
     carte.nb_adultes = nb_adultes
-    carte.derniere_maj = datetime.now()
+    carte.derniere_maj = maintenant()
 
     for enfant in list(carte.enfants):
         session.delete(enfant)
@@ -108,7 +109,7 @@ def enregistrer_passage_carte(session: Session, carte: Carte) -> None:
     )
 
     if est_nouveau:
-        carte.premier_passage_le = datetime.now()
+        carte.premier_passage_le = maintenant()
         session.commit()
 
 

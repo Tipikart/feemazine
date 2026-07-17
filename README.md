@@ -21,6 +21,44 @@ passages au LAEP. Le système propose deux modes de pointage :
    venv\Scripts\activate
    ```
 
+## Authentification
+
+Le programme est protégé par une authentification par email et mot de passe.
+Toutes les pages (sauf la page de connexion) nécessitent d'être connecté.
+
+### Créer un compte
+
+```
+python creer_utilisateur.py email@exemple.fr mot_de_passe "Prénom Nom"
+```
+
+### Se connecter
+
+1. Ouvrir l'application
+2. Saisir son email et son mot de passe
+3. La session dure 14 jours
+
+### Configuration de la clé secrète
+
+Définir une variable d'environnement `SECRET_KEY` (32+ caractères hexadécimaux)
+dans le fichier `.env` à la racine du projet, générée avec :
+
+```
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Si absente, la clé est générée automatiquement dans `data/secret.key`.
+
+### Utilisateurs existants (module Heures)
+
+Si des membres existaient déjà dans la table `membres` via le module Heures
+(authentification par lien magique), le script `creer_utilisateur.py` mettra à
+jour leur mot de passe sans perdre les données existantes. Les deux modes
+d'authentification (mot de passe + lien magique) coexistent :
+
+- Connexion par email/mot de passe → tout le programme
+- Connexion par lien magique `/heures/connexion` → module Heures uniquement
+
 2. Installer les dépendances :
 
    ```

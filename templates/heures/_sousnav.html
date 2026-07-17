@@ -1,6 +1,7 @@
 <nav class="sousnav">
     <a href="/heures/" class="{{ 'actif' if souspage == 'personnel' }}">Mon espace</a>
-    <a href="/heures/equipe" class="{{ 'actif' if souspage == 'equipe' }}">Équipe</a>
+    <a href="/heures/recuperation" class="{{ 'actif' if souspage == 'recuperation' }}">Demandes en cours</a>
+    <a href="/heures/equipe" class="{{ 'actif' if souspage == 'equipe' }}">Historique</a>
     {% if membre_courant.role == 'admin' %}
     <a href="/heures/admin" class="{{ 'actif' if souspage == 'admin' }}">Admin</a>
     {% endif %}

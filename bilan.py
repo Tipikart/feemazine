@@ -43,6 +43,8 @@ def ajouter_heure(
     date_activite: date,
     type_activite: str,
     duree_minutes: int,
+    heure_debut: str | None = None,
+    heure_fin: str | None = None,
 ) -> HeureActivite:
     if type_activite not in TYPES_HEURES:
         raise ValueError(f"Type d'activite invalide : {type_activite}")
@@ -54,6 +56,8 @@ def ajouter_heure(
         date=date_activite,
         type=type_activite,
         duree_minutes=duree_minutes,
+        heure_debut=heure_debut,
+        heure_fin=heure_fin,
     )
     session.add(heure)
     session.commit()

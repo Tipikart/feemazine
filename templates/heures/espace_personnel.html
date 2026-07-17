@@ -4,10 +4,11 @@
 
 {% include "heures/_sousnav.html" %}
 
-<h2>Déclarer un horaire</h2>
+<h2>Mes horaires de travail</h2>
+<p class="description">Declarer mes horaires de travail pour la journee en cours.</p>
 <form method="post" action="/heures/declarer" class="formulaire-horaire">
     <label>Date
-        <input type="date" name="date_saisie" value="{{ aujourdhui }}" max="{{ aujourdhui }}" required>
+        <input type="date" name="date_saisie" value="{{ aujourdhui }}" min="{{ date_min }}" max="{{ date_max }}" required>
     </label>
     <label>Arrivée
         <input type="time" name="heure_arrivee" required>
@@ -17,18 +18,53 @@
     </label>
     <button type="submit" class="bouton-primaire">Enregistrer</button>
 </form>
-<p class="note">
-    Un jour déjà déclaré peut être corrigé pendant {{ delai_modification_heures }}h après sa déclaration
-    initiale, tant qu'il n'est pas encore validé. Passé ce délai, ou une fois validé, il n'est plus modifiable.
-</p>
 
-{% if taux_horaire %}
-<h2>Mon taux horaire moyen (mois en cours)</h2>
-<p class="texte-secondaire">Salaire brut mensuel applicable divisé par les heures validées ce mois-ci — visible uniquement par vous et les administrateurs.</p>
+<h2>Mon solde de récupération</h2>
 <div class="resume-rapide">
-    <div class="carte"><span class="valeur">{{ taux_horaire }} €</span><span class="etiquette">Taux horaire moyen</span></div>
+    <div class="carte {% if solde.solde_disponible < 0 %}carte-negatif{% endif %}">
+        <span class="valeur">{{ solde.solde_disponible }} h</span>
+        <span class="etiquette">Solde disponible</span>
+    </div>
+    <div class="carte"><span class="valeur">{{ solde.total_travaille }} h</span><span class="etiquette">Travaillé (total)</span></div>
+    <div class="carte"><span class="valeur">{{ solde.total_prevu }} h</span><span class="etiquette">Prévu (total)</span></div>
+    <div class="carte"><span class="valeur">{{ solde.total_valide }} h</span><span class="etiquette">Récup. validées</span></div>
 </div>
+
+{% if solde.historique %}
+<h3>Détail hebdomadaire</h3>
+<table>
+    <thead><tr><th>Semaine</th><th>Travail</th><th>Prévu</th><th>Delta</th></tr></thead>
+    <tbody>
+    {% for s in solde.historique %}
+        <tr>
+            <td>{{ s.debut }} → {{ s.fin }}</td>
+            <td>{{ s.travaille }} h</td>
+            <td>{{ s.prevu }} h</td>
+            <td class="{% if s.delta >= 0 %}delta-positif{% else %}delta-negatif{% endif %}">
+                {{ '+' if s.delta >= 0 }}{{ s.delta }} h
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="texte-secondaire">Aucun horaire saisi pour le moment. Le solde s'affichera après la première déclaration.</p>
 {% endif %}
+
+<h2>Demander une récupération</h2>
+<form method="post" action="/heures/demander-recup" class="formulaire-horaire" style="max-width: 450px;">
+    <label>Date concernée
+        <input type="date" name="date_recup" required>
+    </label>
+    <label>Durée (heures)
+        <input type="number" step="0.5" min="0.5" name="duree_heures" value="7" required>
+        <span class="note">Pré-rempli à 7h. Ajustez selon vos besoins. Si le montant dépasse votre solde, un avertissement s'affiche mais n'empêche pas l'envoi.</span>
+    </label>
+    <label>Justification (obligatoire, visible par tous)
+        <textarea name="justification" rows="3" required placeholder="RTT, récupération d'heures sup, convenance personnelle…"></textarea>
+    </label>
+    <button type="submit" class="bouton-primaire">Soumettre la demande</button>
+</form>
 
 <h2>Mes horaires</h2>
 {% set base_url = "/heures/" %}
@@ -41,7 +77,7 @@
 {% include "heures/_graphique.html" %}
 
 <table>
-    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th>Statut</th></tr></thead>
+    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th></tr></thead>
     <tbody>
         {% for h in horaires %}
         <tr>
@@ -49,40 +85,11 @@
             <td>{{ h.heure_arrivee }}</td>
             <td>{{ h.heure_depart }}</td>
             <td>{{ h.heures }}</td>
-            <td>
-                {% if h.statut == 'validé' %}<span class="etiquette-statut etiquette-statut-valide">Validé</span>
-                {% else %}<span class="etiquette-statut">Déclaré ({{ h.nb_validations }}/{{ seuil_validation if seuil_validation else '?' }})</span>{% endif %}
-            </td>
         </tr>
         {% else %}
-        <tr><td colspan="5">Aucun horaire sur cette période.</td></tr>
+        <tr><td colspan="4">Aucun horaire sur cette période.</td></tr>
         {% endfor %}
     </tbody>
 </table>
-
-<h2>Horaires à valider</h2>
-{% if horaires_a_valider %}
-<table>
-    <thead><tr><th>Membre</th><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th></th></tr></thead>
-    <tbody>
-        {% for h in horaires_a_valider %}
-        <tr>
-            <td>{{ h.membre_nom }}</td>
-            <td>{{ h.date_affichage }}</td>
-            <td>{{ h.heure_arrivee }}</td>
-            <td>{{ h.heure_depart }}</td>
-            <td>{{ h.heures }}</td>
-            <td>
-                <form method="post" action="/heures/valider/{{ h.id }}" class="action-inline">
-                    <button type="submit" class="bouton-secondaire">Valider</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p class="texte-secondaire">Aucun horaire en attente de votre validation.</p>
-{% endif %}
 
 {% endblock %}

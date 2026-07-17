@@ -3,52 +3,11 @@
 {% block contenu %}
 
 <nav class="sousnav">
-    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthese</a>
-    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Heures</a>
-    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Accueillants</a>
-    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Fiche structure</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Caracteristiques de la structure</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Horaires de la structure</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Equipe</a>
 </nav>
 
-<h2>Saisir une heure d'activite</h2>
-
-{% if accueillants %}
-<form method="post" action="/bilan/heures" class="formulaire-bilan">
-    <div class="champs-en-ligne">
-        <label>Accueillant
-            <select name="accueillant_id" required>
-                {% for a in accueillants %}
-                <option value="{{ a.id }}">{{ a.nom }}</option>
-                {% endfor %}
-            </select>
-        </label>
-
-        <label>Date
-            <input type="date" name="date_activite" required>
-        </label>
-
-        <label>Type d'activite
-            <select name="type_activite" required>
-                {% for code, libelle in types_heures.items() %}
-                <option value="{{ code }}">{{ libelle }}</option>
-                {% endfor %}
-            </select>
-        </label>
-
-        <label>Duree
-            <div class="champs-duree">
-                <input type="number" name="duree_h" min="0" value="0" style="width:65px"> h
-                <input type="number" name="duree_m" min="0" max="59" value="0" style="width:65px"> min
-            </div>
-        </label>
-
-        <button type="submit" class="bouton-primaire" style="align-self:end;">Enregistrer</button>
-    </div>
-</form>
-{% else %}
-<p class="texte-secondaire">
-    Aucun accueillant actif. <a href="/bilan/membres">Ajouter un accueillant</a> avant de saisir des heures.
-</p>
-{% endif %}
 
 <h2>Heures enregistrees — {{ noms_mois[mois] }} {{ annee }}</h2>
 
@@ -93,7 +52,7 @@
     </tbody>
 </table>
 {% else %}
-<p class="texte-secondaire">Aucune heure enregistree pour {{ noms_mois[mois] }} {{ annee }}.</p>
 {% endif %}
+<p class="texte-secondaire">Aucune heure enregistree pour {{ noms_mois[mois] }} {{ annee }}.</p>
 
 {% endblock %}

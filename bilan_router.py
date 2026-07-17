@@ -28,12 +28,12 @@ from bilan import (
     synthese_heures,
 )
 from bilan_models import (
-    Accueillant,
     HeureActivite,
     TYPES_HEURES,
     initialiser_bd,
     obtenir_session_bilan,
 )
+from heures_models import Membre, obtenir_session
 
 routeur = APIRouter(prefix="/bilan", tags=["bilan"])
 templates = Jinja2Templates(directory="templates")
@@ -116,12 +116,18 @@ def afficher_heures(
         mois = mois or date.today().month
 
         heures = lister_heures(session, annee, mois)
-        accueillants = (
-            session.query(Accueillant)
-            .filter(Accueillant.actif.is_(True))
-            .order_by(Accueillant.nom)
-            .all()
-        )
+
+        # Accueillants = membres actifs créés depuis l'admin
+        session_membres = next(obtenir_session())
+        try:
+            accueillants = (
+                session_membres.query(Membre)
+                .filter(Membre.actif.is_(True))
+                .order_by(Membre.nom)
+                .all()
+            )
+        finally:
+            session_membres.close()
 
         return templates.TemplateResponse(
             request,
@@ -134,7 +140,7 @@ def afficher_heures(
                 "types_heures": TYPES_HEURES,
                 "noms_mois": NOMS_MOIS,
                 "fmt": minutes_en_heures,
-                "actif": "bilan",
+                "actif": "fiche_structure",
                 "sousnav": "heures",
                 "erreur": erreur,
                 "confirmation": confirmation,
@@ -146,7 +152,7 @@ def afficher_heures(
 
 @routeur.post("/heures", response_class=HTMLResponse)
 def enregistrer_heure(
-    accueillant_id: int = Form(...),
+    membre_id: int = Form(...),
     date_activite: str = Form(...),
     type_activite: str = Form(...),
     duree_h: int = Form(0),
@@ -166,11 +172,24 @@ def enregistrer_heure(
         if duree_minutes <= 0:
             return _rediriger("/bilan/heures", erreur="La duree doit etre positive.")
 
-        accueillant = session.get(Accueillant, accueillant_id)
-        if not accueillant:
-            return _rediriger("/bilan/heures", erreur="Accueillant introuvable.")
+        # Vérifier que le membre existe dans la base heures
+        session_membres = next(obtenir_session())
+        try:
+            membre = session_membres.get(Membre, membre_id)
+            if not membre:
+                return _rediriger("/bilan/heures", erreur="Membre introuvable.")
+        finally:
+            session_membres.close()
 
-        ajouter_heure(session, accueillant_id, d, type_activite, duree_minutes)
+        # Créer ou réutiliser un accueillant associé à ce membre
+        from bilan_models import Accueillant
+        accueillant = session.query(Accueillant).filter(Accueillant.nom == membre.nom).first()
+        if not accueillant:
+            accueillant = Accueillant(nom=membre.nom, role="accueillant", actif=True)
+            session.add(accueillant)
+            session.flush()
+
+        ajouter_heure(session, accueillant.id, d, type_activite, duree_minutes)
 
         return _rediriger(
             f"/bilan/heures?annee={d.year}&mois={d.month}",
@@ -208,10 +227,11 @@ def afficher_membres(
     confirmation: str | None = None,
 ):
     session = _session()
+    session_membres = next(obtenir_session())
     try:
         accueillants = (
-            session.query(Accueillant)
-            .order_by(Accueillant.actif.desc(), Accueillant.nom)
+            session_membres.query(Membre)
+            .order_by(Membre.actif.desc(), Membre.nom)
             .all()
         )
 
@@ -220,7 +240,7 @@ def afficher_membres(
             "bilan/membres.html",
             {
                 "accueillants": accueillants,
-                "actif": "bilan",
+                "actif": "fiche_structure",
                 "sousnav": "membres",
                 "erreur": erreur,
                 "confirmation": confirmation,
@@ -228,37 +248,26 @@ def afficher_membres(
         )
     finally:
         session.close()
+        session_membres.close()
 
 
-@routeur.post("/membres")
-def ajouter_membre(nom: str = Form(...), role: str = Form("accueillant")):
-    session = _session()
-    try:
-        nom = nom.strip()
-        if not nom:
-            return _rediriger("/bilan/membres", erreur="Le nom est obligatoire.")
-
-        session.add(Accueillant(nom=nom, role=role, actif=True))
-        session.commit()
-        return _rediriger("/bilan/membres", confirmation=f"{nom} ajoute.")
-    finally:
-        session.close()
+# Ajout d'accueillants supprime : les membres sont geres depuis l'interface admin.
 
 
 @routeur.post("/membres/basculer/{membre_id}")
 def basculer_membre(membre_id: int):
-    session = _session()
+    session_membres = next(obtenir_session())
     try:
-        membre = session.get(Accueillant, membre_id)
+        membre = session_membres.get(Membre, membre_id)
         if not membre:
-            return _rediriger("/bilan/membres", erreur="Accueillant introuvable.")
+            return _rediriger("/bilan/membres", erreur="Membre introuvable.")
 
         membre.actif = not membre.actif
-        session.commit()
+        session_membres.commit()
         etat = "reactive" if membre.actif else "desactive"
         return _rediriger("/bilan/membres", confirmation=f"{membre.nom} {etat}.")
     finally:
-        session.close()
+        session_membres.close()
 
 
 # --- Fiche d'identite ---
@@ -284,7 +293,7 @@ def afficher_fiche(
                 "fiche": fiche,
                 "annee": annee,
                 "annees": annees,
-                "actif": "bilan",
+                "actif": "fiche_structure",
                 "sousnav": "fiche",
                 "erreur": erreur,
                 "confirmation": confirmation,

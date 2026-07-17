@@ -3,32 +3,12 @@
 {% block contenu %}
 
 <nav class="sousnav">
-    <a href="/bilan/" class="{{ 'actif' if sousnav == 'synthese' }}">Synthese</a>
-    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Heures</a>
-    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Accueillants</a>
-    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Fiche structure</a>
+    <a href="/bilan/fiche" class="{{ 'actif' if sousnav == 'fiche' }}">Caracteristiques de la structure</a>
+    <a href="/bilan/heures" class="{{ 'actif' if sousnav == 'heures' }}">Horaires de la structure</a>
+    <a href="/bilan/membres" class="{{ 'actif' if sousnav == 'membres' }}">Equipe</a>
 </nav>
 
-<h2>Ajouter un accueillant</h2>
-
-<form method="post" action="/bilan/membres" class="formulaire-bilan">
-    <div class="champs-en-ligne">
-        <label>Nom
-            <input type="text" name="nom" required placeholder="Prenom Nom">
-        </label>
-
-        <label>Role
-            <select name="role">
-                <option value="accueillant">Accueillant</option>
-                <option value="coordinateur">Coordinateur</option>
-                <option value="psychologue">Psychologue</option>
-                <option value="benevole">Benevole</option>
-            </select>
-        </label>
-
-        <button type="submit" class="bouton-primaire" style="align-self:end;">Ajouter</button>
-    </div>
-</form>
+<p class="texte-secondaire">Les accueillants sont les membres créés depuis la page <a href="/admin/utilisateurs">Administration</a>.</p>
 
 <h2>Accueillants</h2>
 
@@ -37,6 +17,7 @@
     <thead>
         <tr>
             <th>Nom</th>
+            <th>Email</th>
             <th>Role</th>
             <th>Statut</th>
             <th></th>
@@ -46,6 +27,7 @@
         {% for a in accueillants %}
         <tr>
             <td>{{ a.nom }}</td>
+            <td>{{ a.email }}</td>
             <td>{{ a.role }}</td>
             <td>
                 {% if a.actif %}
@@ -66,7 +48,7 @@
     </tbody>
 </table>
 {% else %}
-<p class="texte-secondaire">Aucun accueillant enregistre.</p>
+<p class="texte-secondaire">Aucun accueillant enregistre. Créez des utilisateurs depuis la page <a href="/admin/utilisateurs">Administration</a>.</p>
 {% endif %}
 
 <p class="note">

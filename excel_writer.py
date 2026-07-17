@@ -16,6 +16,7 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
+from tz_helpers import maintenant as maintenant_reunion
 
 from openpyxl import Workbook, load_workbook
 
@@ -88,12 +89,12 @@ def enregistrer_passage(
     En mode anonyme, les compteurs sont saisis manuellement.
     En mode carte, les compteurs sont dupliques depuis la fiche carte.
     """
-    maintenant = datetime.now()
+    maintn = maintenant_reunion()
     classeur, feuille = _ouvrir_ou_creer_classeur()
     feuille.append(
         [
-            maintenant.strftime("%Y-%m-%d"),
-            maintenant.strftime("%H:%M:%S"),
+            maintn.strftime("%Y-%m-%d"),
+            maintn.strftime("%H:%M:%S"),
             adultes,
             enfants,
             nouvelle_famille,
@@ -170,7 +171,7 @@ def remplacer_fichier(contenu_binaire: bytes) -> None:
 
     if FICHIER_EXCEL.exists():
         DOSSIER_SAUVEGARDES.mkdir(parents=True, exist_ok=True)
-        horodatage = datetime.now().strftime("%Y%m%d_%H%M%S")
+        horodatage = maintenant_reunion().strftime("%Y%m%d_%H%M%S")
         shutil.copy2(FICHIER_EXCEL, DOSSIER_SAUVEGARDES / f"passages_avant_import_{horodatage}.xlsx")
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)

@@ -96,6 +96,7 @@ input:focus, select:focus, textarea:focus {
 input:disabled { background: var(--gris-50); color: var(--gris-500); }
 
 .texte-secondaire { font-size: 0.88rem; color: var(--gris-700); margin: 0 0 12px; }
+.description { color: var(--gris-500); margin: -0.5rem 0 1.25rem; }
 .note { font-size: 0.78rem; color: var(--gris-500); margin: 8px 0 20px; }
 
 /* En-tête et navigation */
@@ -128,7 +129,7 @@ input:disabled { background: var(--gris-50); color: var(--gris-500); }
     gap: 4px;
 }
 
-.entete nav a {
+.nav-lien {
     text-decoration: none;
     color: var(--gris-500);
     font-size: 0.88rem;
@@ -136,6 +137,81 @@ input:disabled { background: var(--gris-50); color: var(--gris-500); }
     padding: 8px 4px;
     margin: 0 8px;
     border-bottom: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.entete nav a:hover { color: var(--gris-900); }
+.entete nav a.actif { color: var(--bleu); border-bottom-color: var(--bleu); }
+
+/* Menu deroulant Rapport */
+
+.nav-dropdown {
+    position: relative;
+    display: inline-flex;
+    margin: 0 8px;
+}
+
+.nav-dropdown-bouton {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--gris-500);
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: inherit;
+    padding: 8px 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-dropdown-bouton:hover { color: var(--gris-900); }
+.nav-dropdown-bouton.actif { color: var(--bleu); border-bottom-color: var(--bleu); }
+
+.nav-dropdown-fleche { font-size: 0.7rem; line-height: 1; }
+
+.nav-dropdown-contenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--blanc);
+    border: 1px solid var(--gris-200);
+    border-radius: var(--rayon);
+    box-shadow: var(--ombre);
+    min-width: 180px;
+    z-index: 40;
+    padding: 4px 0;
+}
+
+.nav-dropdown-contenu a {
+    display: block;
+    padding: 8px 14px;
+    text-decoration: none;
+    color: var(--gris-700);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.nav-dropdown-contenu a:hover { background: var(--gris-50); color: var(--gris-900); }
+.nav-dropdown-contenu a.actif { color: var(--bleu); background: var(--bleu-clair); }
+
+.nav-dropdown:hover .nav-dropdown-contenu,
+.nav-dropdown:focus-within .nav-dropdown-contenu {
+    display: block;
+}
+
+.entete nav a {
+    text-decoration: none;
+    color: var(--gris-500);
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 8px 4px;
+    margin: 0;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
 }
 
 .entete nav a:hover { color: var(--gris-900); }
@@ -292,6 +368,33 @@ input:disabled { background: var(--gris-50); color: var(--gris-500); }
 
 .carte .valeur { font-size: 1.9rem; font-weight: 700; color: var(--bleu); line-height: 1; }
 .carte .etiquette { font-size: 0.78rem; color: var(--gris-500); margin-top: 6px; }
+
+/* Carte d'attribution — mise en avant */
+
+.carte-attribution {
+    margin: 16px 0 8px;
+    padding: 14px 16px;
+    border: 2px dashed var(--bleu);
+    border-radius: var(--rayon);
+    background: var(--bleu-clair);
+    text-align: center;
+}
+
+.carte-attribution-texte {
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+    color: var(--bleu-fonce);
+}
+
+.carte-attribution-texte strong {
+    font-size: 1rem;
+}
+
+.carte-attribution-bouton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
 
 /* Formulaire de pointage */
 
@@ -786,6 +889,191 @@ details summary:hover { color: var(--bleu); }
     border-bottom: none;
 }
 
+/* ========== RESPONSIVE MOBILE ========== */
+
+@media (max-width: 768px) {
+    body {
+        padding: 0 12px 36px;
+    }
+
+    h1 { font-size: 1rem; }
+
+    /* En-tete : nav en dessous du logo */
+    .entete {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 14px 0;
+    }
+
+    .entete nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 0;
+        padding-bottom: 4px;
+    }
+
+    .entete nav a,
+    .nav-lien,
+    .nav-dropdown-bouton {
+        flex-shrink: 0;
+        font-size: 0.82rem;
+        padding: 8px 6px;
+        margin: 0 4px;
+    }
+
+    .nav-dropdown {
+        margin: 0 4px;
+    }
+
+    .nav-dropdown-contenu {
+        position: static;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        min-width: auto;
+        display: none;
+    }
+
+    .nav-dropdown-contenu a {
+        padding: 6px 12px 6px 20px;
+        font-size: 0.8rem;
+    }
+
+    .nav-dropdown-contenu a.actif {
+        border-bottom: none;
+    }
+
+    .nav-dropdown:focus-within .nav-dropdown-contenu,
+    .nav-dropdown-contenu:target {
+        display: block;
+    }
+
+    .entete-marque .logo {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Tableaux : scroll horizontal si trop larges */
+    table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    th, td { padding: 8px 10px; }
+
+    .tableau-bilan th,
+    .tableau-bilan td { font-size: 0.78rem; padding: 6px; }
+
+    /* Cartes resume : 2 colonnes max */
+    .resume-rapide {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Boutons pleine largeur */
+    .bouton-primaire, .bouton-secondaire {
+        min-height: 44px;
+    }
+
+    /* Filtres : empiles */
+    .filtres {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filtres label { width: 100%; }
+    .filtres input { width: 100%; }
+
+    /* Compteurs */
+    .compteur { padding: 12px; }
+
+    /* Modules Heures */
+    .formulaire-horaire { flex-direction: column; align-items: stretch; }
+    .formulaire-horaire label { width: 100%; }
+    .formulaire-horaire input { width: 100%; }
+
+    .filtres-periode { flex-wrap: wrap; }
+    .filtres-periode a { flex: 1; text-align: center; font-size: 0.78rem; padding: 8px 6px; }
+
+    /* Sous-navigation Heures */
+    .sousnav { flex-wrap: wrap; gap: 2px; }
+    .sousnav a { font-size: 0.8rem; padding: 6px 8px; }
+
+    /* Bilan formulaire */
+    .formulaire-bilan .champs-en-ligne { flex-direction: column; align-items: stretch; }
+    .formulaire-bilan .champs-en-ligne label { width: 100%; }
+
+    /* Choix de mode (cartes) */
+    .choix-mode { flex-direction: column; }
+    .bouton-mode:not(:last-child) { border-right: none; border-bottom: 1px solid var(--gris-300); }
+
+    /* Code carte */
+    .code-carte { font-size: 1.6rem; letter-spacing: 0.08em; }
+
+    .carte-resultat { padding: 20px 14px; }
+
+    /* Blocs enfants */
+    .bloc-enfant-champs { flex-direction: column; }
+    .bloc-enfant-champs label { min-width: auto; }
+
+    /* Champs duree */
+    .champs-duree { flex-wrap: wrap; }
+
+    /* Modale */
+    .modale { padding: 16px; border-radius: 8px; }
+
+    /* Graphiques */
+    .graphique-conteneur { margin: 0 -12px 24px; }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 0 8px 28px;
+    }
+
+    h1 { font-size: 0.92rem; }
+
+    .entete nav a,
+    .nav-lien,
+    .nav-dropdown-bouton {
+        font-size: 0.78rem;
+        padding: 6px 4px;
+        margin: 0 2px;
+    }
+
+    .nav-dropdown {
+        margin: 0 2px;
+    }
+
+    .nav-dropdown-contenu {
+        display: none;
+    }
+
+    .nav-dropdown:focus-within .nav-dropdown-contenu,
+    .nav-dropdown-contenu:target {
+        display: block;
+    }
+
+    .nav-dropdown-contenu a {
+        padding: 5px 10px 5px 16px;
+        font-size: 0.76rem;
+    }
+
+    .carte .valeur { font-size: 1.5rem; }
+    .carte { padding: 14px 6px; }
+
+    .code-carte { font-size: 1.3rem; padding: 12px; }
+
+    .actions-fichier { flex-direction: column; align-items: stretch; }
+    .actions-fichier .bouton-secondaire,
+    .actions-fichier .bouton-primaire {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 @media print {
     .entete, .actions-fichier, .infos-fichier, .resume-rapide,
     .choix-mode, .bouton-tertiaire, nav, .sousnav,
@@ -794,4 +1082,63 @@ details summary:hover { color: var(--bleu); }
     .code-carte { font-size: 2.6rem; }
     .resume-rapide { display: grid !important; }
     .tableau-bilan { font-size: 0.75rem; }
+}
+
+.bouton-choix {
+    padding: 0.5rem 1.5rem;
+    border: 2px solid var(--couleur-principale, #007bff);
+    background: #fff;
+    color: var(--couleur-principale, #007bff);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    min-width: 80px;
+    transition: background 0.15s, color 0.15s;
+}
+.bouton-choix:hover {
+    background: var(--couleur-principale, #007bff);
+    color: #fff;
+}
+.bouton-choix.actif {
+    background: var(--couleur-principale, #007bff);
+    color: #fff;
+}
+.choix-oui-non {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+}
+.sous-champs {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+.champs-heures {
+    display: flex;
+    gap: 1rem;
+    align-items: end;
+}
+.champs-heures label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: #555;
+}
+.champs-heures input {
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.etape-declaration {
+    min-height: 160px;
+}
+.etape-declaration .question-declaration {
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem;
+}
+.liste-resume li:last-child {
+    border-bottom: none !important;
 }

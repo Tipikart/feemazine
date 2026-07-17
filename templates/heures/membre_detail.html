@@ -10,15 +10,16 @@
 
 <div class="resume-rapide">
     <div class="carte"><span class="valeur">{{ total_heures }} h</span><span class="etiquette">Total sur la période</span></div>
-    {% if peut_voir_taux and taux_horaire %}
-    <div class="carte"><span class="valeur">{{ taux_horaire }} €</span><span class="etiquette">Taux horaire moyen (mois en cours)</span></div>
-    {% endif %}
+    <div class="carte {% if solde.solde_disponible < 0 %}carte-negatif{% endif %}">
+        <span class="valeur">{{ solde.solde_disponible }} h</span>
+        <span class="etiquette">Solde disponible</span>
+    </div>
 </div>
 
 {% include "heures/_graphique.html" %}
 
 <table>
-    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th><th>Statut</th></tr></thead>
+    <thead><tr><th>Date</th><th>Arrivée</th><th>Départ</th><th>Heures</th></tr></thead>
     <tbody>
         {% for h in horaires %}
         <tr>
@@ -26,17 +27,16 @@
             <td>{{ h.heure_arrivee }}</td>
             <td>{{ h.heure_depart }}</td>
             <td>{{ h.heures }}</td>
-            <td>
-                {% if h.statut == 'validé' %}<span class="etiquette-statut etiquette-statut-valide">Validé</span>
-                {% else %}<span class="etiquette-statut">Déclaré</span>{% endif %}
-            </td>
         </tr>
         {% else %}
-        <tr><td colspan="5">Aucun horaire sur cette période.</td></tr>
+        <tr><td colspan="4">Aucun horaire sur cette période.</td></tr>
         {% endfor %}
     </tbody>
 </table>
 
-<p><a href="/heures/equipe" class="bouton-tertiaire">← Retour à l'équipe</a></p>
+<p><a href="/heures/equipe" class="bouton-tertiaire">← Retour à l'historique</a></p>
 
+<style>
+.carte-negatif .valeur { color: #b33; }
+</style>
 {% endblock %}

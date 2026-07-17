@@ -1,9 +1,8 @@
-"""Routes et logique métier du module Heures (suivi du temps de l'équipe).
+"""Routes et logique métier du module Heures (suivi des heures et récupération).
 
 Monté comme router FastAPI additionnel sur l'application principale (voir
 configurer() en bas de fichier, appelée depuis app.py), sous le préfixe
-/heures. Conçu pour rester autonome : si ce module est un jour extrait
-dans son propre projet, seul l'appel à configurer(app) change.
+/heures. Conçu pour rester autonome.
 """
 
 import calendar
@@ -13,7 +12,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from heures_auth import (
@@ -24,14 +23,17 @@ from heures_auth import (
     membre_admin,
     membre_connecte,
 )
-from heures_email_sender import envoyer_lien_connexion
+from heures_email_sender import envoyer_lien_connexion, envoyer_notification_demande, envoyer_resultat_recup
 from heures_models import (
     DELAI_MODIFICATION,
+    DemandeRecup,
+    HeuresPrevues,
     Horaire,
     Membre,
     Parametre,
-    Salaire,
-    Validation,
+    ValidationRecup,
+    calculer_seuil_majorite,
+    calculer_solde,
     initialiser_bd,
     obtenir_session,
 )
@@ -40,7 +42,8 @@ router = APIRouter(prefix="/heures")
 templates = Jinja2Templates(directory="templates")
 
 
-# --- Aides de calcul ---------------------------------------------------
+# ── Aides ───────────────────────────────────────────────────────────────
+
 
 def _plage_periode(periode: str, reference: date) -> tuple[date, date]:
     if periode == "jour":
@@ -59,57 +62,6 @@ def _duree_heures(horaire: Horaire) -> float:
     return round(delta.total_seconds() / 3600, 2)
 
 
-def _jours_ouverture(debut: date, fin: date) -> list[date]:
-    """Jours d'ouverture = jours de semaine (lundi-vendredi) de la période."""
-    jours = []
-    jour = debut
-    while jour <= fin:
-        if jour.weekday() < 5:
-            jours.append(jour)
-        jour += timedelta(days=1)
-    return jours
-
-
-def _salaire_applicable(session: Session, membre_id: int, a_la_date: date) -> Salaire | None:
-    return (
-        session.query(Salaire)
-        .filter(Salaire.membre_id == membre_id, Salaire.date_effet <= a_la_date)
-        .order_by(Salaire.date_effet.desc())
-        .first()
-    )
-
-
-def _taux_horaire_moyen_mois_courant(session: Session, membre_id: int) -> float | None:
-    """Salaire brut mensuel applicable ce mois-ci, divisé par les heures validées ce mois-ci."""
-    aujourdhui = date.today()
-    dernier_jour = calendar.monthrange(aujourdhui.year, aujourdhui.month)[1]
-    debut_mois = aujourdhui.replace(day=1)
-    fin_mois = aujourdhui.replace(day=dernier_jour)
-
-    salaire = _salaire_applicable(session, membre_id, fin_mois)
-    if salaire is None:
-        return None
-
-    horaires_valides = (
-        session.query(Horaire)
-        .filter(
-            Horaire.membre_id == membre_id,
-            Horaire.statut == "validé",
-            Horaire.date >= debut_mois,
-            Horaire.date <= fin_mois,
-        )
-        .all()
-    )
-    total_heures = sum(_duree_heures(h) for h in horaires_valides)
-    if total_heures <= 0:
-        return None
-    return round(salaire.salaire_brut_mensuel / total_heures, 2)
-
-
-def _peut_modifier(horaire: Horaire) -> bool:
-    return horaire.statut != "validé" and datetime.now() <= horaire.modifiable_jusqu_a
-
-
 def _horaire_pour_affichage(horaire: Horaire, avec_membre: bool = False) -> dict:
     donnees = {
         "id": horaire.id,
@@ -118,31 +70,13 @@ def _horaire_pour_affichage(horaire: Horaire, avec_membre: bool = False) -> dict
         "heure_arrivee": horaire.heure_arrivee.strftime("%H:%M"),
         "heure_depart": horaire.heure_depart.strftime("%H:%M"),
         "heures": _duree_heures(horaire),
-        "statut": horaire.statut,
-        "peut_modifier": _peut_modifier(horaire),
-        "nb_validations": len(horaire.validations),
     }
     if avec_membre:
         donnees["membre_nom"] = horaire.membre.nom
     return donnees
 
 
-def _horaires_a_valider(session: Session, membre: Membre) -> list[Horaire]:
-    deja_valides = session.query(Validation.horaire_id).filter(Validation.validateur_id == membre.id).subquery()
-    return (
-        session.query(Horaire)
-        .filter(
-            Horaire.membre_id != membre.id,
-            Horaire.statut == "déclaré",
-            ~Horaire.id.in_(deja_valides),
-        )
-        .order_by(Horaire.date.desc())
-        .all()
-    )
-
-
 def _graphique(periode: str, horaires: list[Horaire], debut: date, fin: date) -> list[dict]:
-    """Données d'un graphique en barres : par jour, sauf pour l'année (par mois)."""
     heures_par_jour: dict[date, float] = {}
     for h in horaires:
         heures_par_jour[h.date] = heures_par_jour.get(h.date, 0) + _duree_heures(h)
@@ -180,7 +114,8 @@ def _msg(*, erreur: str | None = None, confirmation: str | None = None) -> str:
     return "&".join(elements)
 
 
-# --- Connexion (lien magique) -------------------------------------------
+# ── Connexion (lien magique) — inchangé ─────────────────────────────────
+
 
 def _rendre_connexion(request: Request, **kwargs):
     contexte = {
@@ -230,8 +165,6 @@ def creer_profil(
     if session.query(Membre).filter(Membre.email == email).first() is not None:
         return _rendre_connexion(request, email=email, erreur="Un profil existe déjà pour cet email.")
 
-    # Le tout premier membre créé sur une base vide devient admin : sans cela,
-    # personne ne pourrait jamais accéder à l'espace admin pour promouvoir qui que ce soit.
     premier_membre = session.query(Membre).count() == 0
     membre = Membre(nom=nom, email=email, role="admin" if premier_membre else "membre", actif=True)
     session.add(membre)
@@ -258,7 +191,8 @@ def deconnexion(request: Request):
     return RedirectResponse(url="/heures/connexion", status_code=303)
 
 
-# --- Espace personnel ----------------------------------------------------
+# ── Espace personnel (déclaration + solde) ──────────────────────────────
+
 
 @router.get("/", response_class=HTMLResponse)
 def espace_personnel(
@@ -269,8 +203,10 @@ def espace_personnel(
     session: Session = Depends(obtenir_session),
     membre: Membre = Depends(membre_connecte),
 ):
-    aujourdhui = date.today()
-    debut, fin = _plage_periode(periode, aujourdhui)
+    from tz_helpers import aujourdhui as aujourdhui_reunion
+    aujd = aujourdhui_reunion()
+    debut, fin = _plage_periode(periode, aujd)
+    date_min = (aujd - timedelta(days=2)).isoformat()
 
     horaires = (
         session.query(Horaire)
@@ -278,6 +214,8 @@ def espace_personnel(
         .order_by(Horaire.date.desc())
         .all()
     )
+
+    solde = calculer_solde(session, membre.id)
 
     return templates.TemplateResponse(
         request,
@@ -291,12 +229,11 @@ def espace_personnel(
             "horaires": [_horaire_pour_affichage(h) for h in horaires],
             "total_heures": round(sum(_duree_heures(h) for h in horaires), 2),
             "periode": periode,
-            "taux_horaire": _taux_horaire_moyen_mois_courant(session, membre.id),
             "graphique": _graphique(periode, horaires, debut, fin),
-            "horaires_a_valider": [_horaire_pour_affichage(h, avec_membre=True) for h in _horaires_a_valider(session, membre)],
-            "aujourdhui": aujourdhui.isoformat(),
-            "delai_modification_heures": int(DELAI_MODIFICATION.total_seconds() // 3600),
-            "seuil_validation": session.get(Parametre, 1).seuil_validation,
+            "aujourdhui": aujd.isoformat(),
+            "date_min": date_min,
+            "date_max": aujd.isoformat(),
+            "solde": solde,
         },
     )
 
@@ -320,21 +257,16 @@ def declarer_horaire(
         url = "/heures/?" + _msg(erreur="L'heure de départ doit être après l'heure d'arrivée.")
         return RedirectResponse(url=url, status_code=303)
 
+    maintenant = datetime.now()
     existant = session.query(Horaire).filter(Horaire.membre_id == membre.id, Horaire.date == jour).first()
 
     if existant is not None:
-        if not _peut_modifier(existant):
-            url = "/heures/?" + _msg(erreur="Ce jour n'est plus modifiable (délai dépassé ou horaire déjà validé).")
+        if maintenant > existant.modifiable_jusqu_a:
+            url = "/heures/?" + _msg(erreur="Ce jour n'est plus modifiable (délai dépassé).")
             return RedirectResponse(url=url, status_code=303)
         existant.heure_arrivee = arrivee
         existant.heure_depart = depart
-        # Les validations déjà obtenues portaient sur les horaires précédents : elles ne
-        # tiennent plus après une correction, il faut les valider à nouveau.
-        for validation in list(existant.validations):
-            session.delete(validation)
-        existant.statut = "déclaré"
     else:
-        maintenant = datetime.now()
         session.add(
             Horaire(
                 membre_id=membre.id,
@@ -351,43 +283,228 @@ def declarer_horaire(
     return RedirectResponse(url="/heures/?" + _msg(confirmation="Horaire enregistré."), status_code=303)
 
 
-@router.post("/valider/{horaire_id}")
-def valider_horaire(
-    horaire_id: int,
+# ── Demande de récupération ─────────────────────────────────────────────
+
+
+@router.post("/demander-recup")
+def demander_recup(
+    request: Request,
+    date_recup: str = Form(...),
+    duree_heures: float = Form(...),
+    justification: str = Form(...),
     session: Session = Depends(obtenir_session),
     membre: Membre = Depends(membre_connecte),
 ):
-    horaire = session.get(Horaire, horaire_id)
-    if horaire is None:
-        return RedirectResponse(url="/heures/?" + _msg(erreur="Horaire introuvable."), status_code=303)
+    try:
+        jour = date.fromisoformat(date_recup)
+    except ValueError:
+        return RedirectResponse(url="/heures/?" + _msg(erreur="Date de récupération invalide."), status_code=303)
 
-    if horaire.membre_id == membre.id:
-        url = "/heures/?" + _msg(erreur="Vous ne pouvez pas valider vos propres horaires.")
+    if duree_heures <= 0:
+        return RedirectResponse(url="/heures/?" + _msg(erreur="La durée doit être positive."), status_code=303)
+
+    justification = justification.strip()
+    if not justification:
+        return RedirectResponse(url="/heures/?" + _msg(erreur="La justification est obligatoire."), status_code=303)
+
+    solde = calculer_solde(session, membre.id)
+    avertissement = None
+    if duree_heures > solde["solde_disponible"]:
+        avertissement = (
+            f"⚠ La durée demandée ({duree_heures}h) dépasse votre solde disponible "
+            f"({solde['solde_disponible']}h). La demande sera soumise malgré tout."
+        )
+
+    demande = DemandeRecup(
+        membre_id=membre.id,
+        date_recup=jour,
+        duree_heures=duree_heures,
+        justification=justification,
+        statut="en_attente",
+    )
+    session.add(demande)
+    session.commit()
+
+    # Notification par email à tous les autres membres actifs
+    autres_membres = (
+        session.query(Membre.email)
+        .filter(Membre.actif.is_(True), Membre.id != membre.id)
+        .all()
+    )
+    destinataires = [m.email for m in autres_membres]
+    # URL complète avec le préfixe nginx (/feemazine/) que FastAPI ne voit pas
+    lien = str(request.base_url) + "feemazine/heures/recuperation"
+    envoyer_notification_demande(
+        lien_recup=lien,
+        demandeur_nom=membre.nom,
+        duree_heures=demande.duree_heures,
+        justification=demande.justification,
+        destinataires=destinataires,
+    )
+
+    url = "/heures/recuperation?" + _msg(confirmation="Demande de récupération soumise.")
+    if avertissement:
+        url += "&" + quote(avertissement)
+    return RedirectResponse(url=url, status_code=303)
+
+
+# ── Vue partagée des demandes de récupération ───────────────────────────
+
+
+@router.get("/recuperation", response_class=HTMLResponse, name="vue_recuperation")
+def vue_recuperation(
+    request: Request,
+    erreur: str | None = None,
+    confirmation: str | None = None,
+    session: Session = Depends(obtenir_session),
+    membre: Membre = Depends(membre_connecte),
+):
+    demandes = (
+        session.query(DemandeRecup)
+        .order_by(DemandeRecup.cree_le.desc())
+        .all()
+    )
+
+    solde = calculer_solde(session, membre.id)
+    seuil_majorite = calculer_seuil_majorite(session)
+
+    demandes_vue = []
+    for d in demandes:
+        votes_valide = [v for v in d.validations if v.decision == "valide"]
+        votes_refuse = [v for v in d.validations if v.decision == "refuse"]
+        mon_vote = next((v for v in d.validations if v.validateur_id == membre.id), None)
+        peut_voter = (
+            d.statut == "en_attente"
+            and d.membre_id != membre.id
+            and mon_vote is None
+        )
+
+        demandes_vue.append({
+            "demande": d,
+            "demandeur_nom": d.demandeur.nom,
+            "date_recup_affichage": d.date_recup.strftime("%d/%m/%Y"),
+            "cree_le_affichage": d.cree_le.strftime("%d/%m/%Y %H:%M"),
+            "nb_valide": len(votes_valide),
+            "nb_refuse": len(votes_refuse),
+            "validations": [
+                {
+                    "validateur_nom": v.validateur.nom,
+                    "decision": v.decision,
+                    "commentaire": v.commentaire,
+                    "date_vote": v.date_validation.strftime("%d/%m/%Y %H:%M"),
+                }
+                for v in d.validations
+            ],
+            "peut_voter": peut_voter,
+            "est_mien": d.membre_id == membre.id,
+        })
+
+    return templates.TemplateResponse(
+        request,
+        "heures/recuperation.html",
+        {
+            "erreur": erreur,
+            "confirmation": confirmation,
+            "actif": "heures",
+            "souspage": "recuperation",
+            "membre_courant": membre,
+            "demandes": demandes_vue,
+            "solde": solde,
+            "seuil_majorite": seuil_majorite,
+        },
+    )
+
+
+@router.post("/recuperation/{demande_id}/voter")
+def voter_recup(
+    demande_id: int,
+    request: Request,
+    decision: str = Form(...),
+    commentaire: str = Form(""),
+    session: Session = Depends(obtenir_session),
+    membre: Membre = Depends(membre_connecte),
+):
+    demande = session.get(DemandeRecup, demande_id)
+    if demande is None:
+        return RedirectResponse(url="/heures/recuperation?" + _msg(erreur="Demande introuvable."), status_code=303)
+
+    if demande.statut != "en_attente":
+        return RedirectResponse(url="/heures/recuperation?" + _msg(erreur="Cette demande est déjà traitée."), status_code=303)
+
+    if demande.membre_id == membre.id:
+        url = "/heures/recuperation?" + _msg(erreur="Vous ne pouvez pas voter sur votre propre demande.")
         return RedirectResponse(url=url, status_code=303)
 
-    if horaire.statut == "validé":
-        return RedirectResponse(url="/heures/?" + _msg(erreur="Cet horaire est déjà validé."), status_code=303)
+    if decision not in ("valide", "refuse"):
+        return RedirectResponse(url="/heures/recuperation?" + _msg(erreur="Décision invalide."), status_code=303)
 
-    if session.query(Validation).filter_by(horaire_id=horaire.id, validateur_id=membre.id).first() is not None:
-        return RedirectResponse(url="/heures/?" + _msg(erreur="Vous avez déjà validé cet horaire."), status_code=303)
+    vote_existant = (
+        session.query(ValidationRecup)
+        .filter_by(demande_id=demande_id, validateur_id=membre.id)
+        .first()
+    )
+    if vote_existant is not None:
+        url = "/heures/recuperation?" + _msg(erreur="Vous avez déjà voté sur cette demande.")
+        return RedirectResponse(url=url, status_code=303)
 
-    try:
-        session.add(Validation(horaire_id=horaire.id, validateur_id=membre.id))
+    session.add(ValidationRecup(
+        demande_id=demande_id,
+        validateur_id=membre.id,
+        decision=decision,
+        commentaire=commentaire.strip() or None,
+    ))
+    session.commit()
+
+    # Vérifier les seuils (majorité simple dynamique)
+    seuil = calculer_seuil_majorite(session)
+    nb_valide = (
+        session.query(func.count(ValidationRecup.id))
+        .filter_by(demande_id=demande_id, decision="valide")
+        .scalar()
+    )
+    nb_refuse = (
+        session.query(func.count(ValidationRecup.id))
+        .filter_by(demande_id=demande_id, decision="refuse")
+        .scalar()
+    )
+
+    if nb_valide >= seuil:
+        demande.statut = "validee"
         session.commit()
-    except IntegrityError:
-        session.rollback()
-        return RedirectResponse(url="/heures/?" + _msg(erreur="Vous avez déjà validé cet horaire."), status_code=303)
-
-    seuil = session.get(Parametre, 1).seuil_validation
-    nb_validations = session.query(Validation).filter_by(horaire_id=horaire.id).count()
-    if nb_validations >= seuil:
-        horaire.statut = "validé"
+        envoyer_resultat_recup(
+            destinataire=demande.demandeur.email,
+            demandeur_nom=demande.demandeur.nom,
+            duree_heures=demande.duree_heures,
+            resultat="validee",
+            lien_recup=str(request.base_url) + "feemazine/heures/recuperation",
+        )
+        return RedirectResponse(
+            url="/heures/recuperation?" + _msg(confirmation=f"Demande approuvée (majorité {seuil}.{seuil})."),
+            status_code=303,
+        )
+    elif nb_refuse >= seuil:
+        demande.statut = "refusee"
         session.commit()
+        envoyer_resultat_recup(
+            destinataire=demande.demandeur.email,
+            demandeur_nom=demande.demandeur.nom,
+            duree_heures=demande.duree_heures,
+            resultat="refusee",
+            lien_recup=str(request.base_url) + "feemazine/heures/recuperation",
+        )
+        return RedirectResponse(
+            url="/heures/recuperation?" + _msg(confirmation=f"Demande refusée (majorité {seuil}.{seuil})."),
+            status_code=303,
+        )
 
-    return RedirectResponse(url="/heures/?" + _msg(confirmation="Validation enregistrée."), status_code=303)
+    return RedirectResponse(
+        url="/heures/recuperation?" + _msg(confirmation=f"Vote enregistré ({nb_valide}/{seuil} valide, {nb_refuse}/{seuil} refus)."),
+        status_code=303,
+    )
 
 
-# --- Vue équipe ------------------------------------------------------------
+# ── Vue équipe ──────────────────────────────────────────────────────────
+
 
 @router.get("/equipe", response_class=HTMLResponse)
 def vue_equipe(
@@ -398,7 +515,6 @@ def vue_equipe(
 ):
     aujourdhui = date.today()
     debut, fin = _plage_periode(periode, aujourdhui)
-    jours_ouvres = len(_jours_ouverture(debut, fin))
 
     membres = session.query(Membre).filter(Membre.actif.is_(True)).order_by(Membre.nom).all()
     lignes = []
@@ -408,25 +524,20 @@ def vue_equipe(
             .filter(Horaire.membre_id == m.id, Horaire.date >= debut, Horaire.date <= fin)
             .all()
         )
-        jours_presents = len({h.date for h in horaires_m})
-        lignes.append(
-            {
-                "id": m.id,
-                "nom": m.nom,
-                "total_heures": round(sum(_duree_heures(h) for h in horaires_m), 2),
-                "taux_presence": round((jours_presents / jours_ouvres) * 100) if jours_ouvres else 0,
-            }
-        )
-
-    lignes.sort(key=lambda ligne: ligne["total_heures"], reverse=True)
-    meilleur = lignes[0] if lignes and lignes[0]["total_heures"] > 0 else None
+        solde = calculer_solde(session, m.id)
+        lignes.append({
+            "id": m.id,
+            "nom": m.nom,
+            "total_heures": round(sum(_duree_heures(h) for h in horaires_m), 2),
+            "solde": solde["solde_disponible"],
+        })
 
     return templates.TemplateResponse(
         request,
         "heures/vue_equipe.html",
         {
             "erreur": None, "confirmation": None, "actif": "heures", "souspage": "equipe",
-            "membre_courant": membre, "periode": periode, "lignes": lignes, "meilleur": meilleur,
+            "membre_courant": membre, "periode": periode, "lignes": lignes,
         },
     )
 
@@ -451,8 +562,7 @@ def fiche_membre(
         .order_by(Horaire.date.desc())
         .all()
     )
-
-    peut_voir_taux = membre.id == membre_cible.id or membre.role == "admin"
+    solde = calculer_solde(session, membre_id)
 
     return templates.TemplateResponse(
         request,
@@ -463,14 +573,14 @@ def fiche_membre(
             "horaires": [_horaire_pour_affichage(h) for h in horaires],
             "total_heures": round(sum(_duree_heures(h) for h in horaires), 2),
             "periode": periode,
-            "taux_horaire": _taux_horaire_moyen_mois_courant(session, membre_id) if peut_voir_taux else None,
-            "peut_voir_taux": peut_voir_taux,
             "graphique": _graphique(periode, horaires, debut, fin),
+            "solde": solde,
         },
     )
 
 
-# --- Espace admin ----------------------------------------------------------
+# ── Espace admin ────────────────────────────────────────────────────────
+
 
 @router.get("/admin", response_class=HTMLResponse)
 def afficher_admin(
@@ -484,14 +594,20 @@ def afficher_admin(
     aujourdhui = date.today()
     lignes = []
     for m in membres:
-        salaire = _salaire_applicable(session, m.id, aujourdhui)
-        lignes.append(
-            {
-                "id": m.id, "nom": m.nom, "email": m.email, "role": m.role, "actif": m.actif,
-                "salaire_actuel": salaire.salaire_brut_mensuel if salaire else None,
-                "taux_horaire": _taux_horaire_moyen_mois_courant(session, m.id),
-            }
+        solde = calculer_solde(session, m.id)
+        hp = (
+            session.query(HeuresPrevues)
+            .filter(HeuresPrevues.membre_id == m.id)
+            .order_by(HeuresPrevues.date_effet.desc())
+            .first()
         )
+        lignes.append({
+            "id": m.id, "nom": m.nom, "email": m.email, "role": m.role, "actif": m.actif,
+            "heures_prevues": hp.heures_par_semaine if hp else None,
+            "derniere_date_effet": hp.date_effet.isoformat() if hp else None,
+            "total_travaille": solde["total_travaille"],
+            "solde": solde["solde_disponible"],
+        })
 
     return templates.TemplateResponse(
         request,
@@ -499,7 +615,7 @@ def afficher_admin(
         {
             "erreur": erreur, "confirmation": confirmation, "actif": "heures", "souspage": "admin",
             "membre_courant": membre, "lignes": lignes,
-            "seuil_validation": session.get(Parametre, 1).seuil_validation,
+            "seuil_majorite": calculer_seuil_majorite(session),
         },
     )
 
@@ -556,10 +672,10 @@ def reactiver_membre(
     return RedirectResponse(url="/heures/admin?" + _msg(confirmation="Membre réactivé."), status_code=303)
 
 
-@router.post("/admin/salaires")
-def ajouter_salaire(
+@router.post("/admin/heures-prevues")
+def definir_heures_prevues(
     membre_id: int = Form(...),
-    salaire_brut_mensuel: float = Form(...),
+    heures_par_semaine: float = Form(...),
     date_effet: str = Form(...),
     session: Session = Depends(obtenir_session),
     membre: Membre = Depends(membre_admin),
@@ -569,38 +685,22 @@ def ajouter_salaire(
     except ValueError:
         return RedirectResponse(url="/heures/admin?" + _msg(erreur="Date d'effet invalide."), status_code=303)
 
-    if salaire_brut_mensuel <= 0:
-        return RedirectResponse(url="/heures/admin?" + _msg(erreur="Le salaire doit être positif."), status_code=303)
+    if heures_par_semaine < 0:
+        return RedirectResponse(url="/heures/admin?" + _msg(erreur="Le nombre d'heures ne peut pas être négatif."), status_code=303)
 
-    session.add(Salaire(membre_id=membre_id, salaire_brut_mensuel=salaire_brut_mensuel, date_effet=jour_effet))
+    session.add(HeuresPrevues(membre_id=membre_id, heures_par_semaine=heures_par_semaine, date_effet=jour_effet))
     session.commit()
-    return RedirectResponse(url="/heures/admin?" + _msg(confirmation="Nouveau salaire enregistré."), status_code=303)
+    return RedirectResponse(url="/heures/admin?" + _msg(confirmation="Heures prévues enregistrées."), status_code=303)
 
 
-@router.post("/admin/parametres")
-def modifier_parametres(
-    seuil_validation: int = Form(...),
-    session: Session = Depends(obtenir_session),
-    membre: Membre = Depends(membre_admin),
-):
-    if seuil_validation < 1:
-        return RedirectResponse(url="/heures/admin?" + _msg(erreur="Le seuil doit être au moins 1."), status_code=303)
-
-    parametre = session.get(Parametre, 1)
-    parametre.seuil_validation = seuil_validation
-    session.commit()
-    return RedirectResponse(url="/heures/admin?" + _msg(confirmation="Seuil de validation mis à jour."), status_code=303)
 
 
-# --- Intégration -------------------------------------------------------
+
+# ── Intégration ──────────────────────────────────────────────────────────
+
 
 def configurer(app) -> None:
-    """Monte le router Heures sur l'application FastAPI principale.
-
-    Initialise la base SQLite du module et enregistre les gestionnaires
-    d'erreurs qui transforment les échecs d'authentification/autorisation
-    en redirections propres plutôt qu'en erreurs 500.
-    """
+    """Monte le router Heures sur l'application FastAPI principale."""
     initialiser_bd()
     app.include_router(router)
 

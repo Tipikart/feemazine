@@ -87,16 +87,23 @@ def afficher_gestion(
     nb_actives = session.query(Carte).filter(Carte.actif.is_(True)).count()
     nb_inactives = session.query(Carte).filter(Carte.actif.is_(False)).count()
 
+    from app import _infos_fichier, _parametres_pour_gabarit
+    from statistiques import resume_rapide
+
     return templates.TemplateResponse(
         request,
         "cartes/gestion.html",
         {
             "erreur": erreur,
             "confirmation": confirmation,
-            "actif": "cartes",
+            "actif": "familles",
+            "sousnav": "gestion",
             "nb_actives": nb_actives,
             "nb_inactives": nb_inactives,
             "duree_purge": parametres.duree_purge_cartes_mois,
+            "stats": resume_rapide(),
+            "infos": _infos_fichier(),
+            "parametres": _parametres_pour_gabarit(),
         },
     )
 
@@ -280,6 +287,13 @@ def configurer(app) -> None:
 
     from excel_writer import FichierVerrouille
 
+    from datetime import date, datetime, time
+    from bilan_models import Accueillant, HeureActivite, initialiser_bd, obtenir_session_bilan
+
+    initialiser_bd()
+
+    from excel_writer import lire_tous_les_passages
+
     @app.post("/passage-carte")
     def passage_avec_carte(code: str = Form(...)):
         session = next(obtenir_session_carte())
@@ -295,6 +309,21 @@ def configurer(app) -> None:
                     url="/?" + _msg(erreur="Cette carte a ete desactivee. Contactez un accueillant."),
                     status_code=303,
                 )
+
+            # Verifier doublon : meme carte deja enregistree aujourd'hui
+            from tz_helpers import aujourdhui
+            aujd_str = aujourdhui().isoformat()
+            passages = lire_tous_les_passages()
+            deja_passe = any(
+                p.get("date") == aujd_str and p.get("carte_id") == code.upper()
+                for p in passages
+            )
+            if deja_passe:
+                return RedirectResponse(
+                    url="/?" + _msg(erreur=f"Cette carte ({code}) a deja ete enregistree aujourd'hui."),
+                    status_code=303,
+                )
+
             try:
                 enregistrer_passage_carte(session, carte)
             except FichierVerrouille as e:
@@ -302,8 +331,21 @@ def configurer(app) -> None:
                     url="/?" + _msg(erreur=f"{e} Fermez-le puis reessayez."),
                     status_code=303,
                 )
+
+            # Verifier si une plage ouverture existe pour aujourd'hui
+            from bilan_models import HeureActivite, obtenir_session_bilan
+            session_bilan2 = next(obtenir_session_bilan())
+            try:
+                plage_existe = session_bilan2.query(HeureActivite).filter(
+                    HeureActivite.date == aujourdhui(),
+                    HeureActivite.type == "ouverture_public",
+                ).first() is not None
+            finally:
+                session_bilan2.close()
+
+            dest = "/" if plage_existe else "/ouverture"
             return RedirectResponse(
-                url="/?" + _msg(confirmation=f"Passage enregistre (carte {code})."),
+                url=dest + "?" + _msg(confirmation=f"Passage enregistre (carte {code})."),
                 status_code=303,
             )
         finally:

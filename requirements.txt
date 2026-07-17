@@ -5,3 +5,4 @@ openpyxl
 python-multipart
 sqlalchemy
 itsdangerous
+passlib[bcrypt]

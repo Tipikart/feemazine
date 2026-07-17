@@ -1,33 +1,29 @@
 {% extends "base.html" %}
-{% block titre %}Équipe — Heures{% endblock %}
+{% block titre %}Historique — Heures{% endblock %}
 {% block contenu %}
 
 {% include "heures/_sousnav.html" %}
 
-<h2>Statistiques d'équipe</h2>
+<h2>Historique</h2>
 {% set base_url = "/heures/equipe" %}
 {% include "heures/_filtre_periode.html" %}
 
-{% if meilleur %}
-<p class="message confirmation">
-    {{ meilleur.nom }} est en tête sur cette période, avec {{ meilleur.total_heures }} h travaillées.
-</p>
-{% endif %}
-
 <table>
-    <thead><tr><th>Membre</th><th>Taux de présence</th><th>Heures travaillées</th></tr></thead>
+    <thead><tr><th>Membre</th><th>Heures travaillées</th><th>Solde disponible</th></tr></thead>
     <tbody>
-        {% for ligne in lignes %}
+        {% for l in lignes %}
         <tr>
-            <td><a href="/heures/equipe/{{ ligne.id }}?periode={{ periode }}">{{ ligne.nom }}</a></td>
-            <td>{{ ligne.taux_presence }} %</td>
-            <td>{{ ligne.total_heures }} h</td>
+            <td><a href="/heures/equipe/{{ l.id }}">{{ l.nom }}</a></td>
+            <td>{{ l.total_heures }} h</td>
+            <td class="{% if l.solde < 0 %}delta-negatif{% endif %}">{{ l.solde }} h</td>
         </tr>
         {% else %}
         <tr><td colspan="3">Aucun membre actif.</td></tr>
         {% endfor %}
     </tbody>
 </table>
-<p class="note">Taux de présence : jours avec au moins un horaire déclaré, sur les jours d'ouverture (lundi-vendredi) de la période.</p>
 
+<style>
+.delta-negatif { color: #b33; font-weight: 500; }
+</style>
 {% endblock %}

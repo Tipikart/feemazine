@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block titre %}Utilisateurs — Fée Mazine{% endblock %}
+{% block contenu %}
+
+<h2>Gestion des utilisateurs</h2>
+
+<form method="post" action="/admin/utilisateurs/creer" class="formulaire-creer-utilisateur" style="max-width: 500px; margin-bottom: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 6px;">
+    <h3>Nouvel utilisateur</h3>
+    <label>Email
+        <input type="email" name="email" required placeholder="prenom@exemple.fr">
+    </label>
+    <label>Nom (optionnel)
+        <input type="text" name="nom" placeholder="Prénom Nom">
+    </label>
+    <label>Mot de passe
+        <input type="text" name="mot_de_passe" required minlength="4" placeholder="4+ caractères">
+    </label>
+    <label>Rôle
+        <select name="role">
+            <option value="membre" selected>Membre</option>
+            <option value="admin">Administrateur</option>
+        </select>
+    </label>
+    <button type="submit" class="bouton-primaire">Créer le compte</button>
+</form>
+
+<h3>Utilisateurs existants ({{ membres|length }})</h3>
+
+<table class="tableau-utilisateurs">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Nom</th>
+            <th>Rôle</th>
+            <th>Actif</th>
+            <th>Mot de passe défini</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for m in membres %}
+        <tr>
+            <td>{{ m.email }}</td>
+            <td>{{ m.nom or '—' }}</td>
+            <td>{{ m.role }}</td>
+            <td>
+                {% if responsable_id == m.id %}
+                <span style="color:green;font-weight:bold;">&#10003;</span>
+                {% else %}
+                <span style="color:#aaa;">—</span>
+                {% endif %}
+            </td>
+            <td>{{ 'Oui' if m.actif else 'Non' }}</td>
+            <td>{{ 'Oui' if m.mot_de_passe_hash else 'Non' }}</td>
+            <td>
+                <form method="post" action="/admin/designer-responsable/{{ m.id }}" style="display:inline;">
+                    <button type="submit" class="bouton-tertiaire" style="font-size:0.85rem;padding:0.3rem 0.6rem;">
+                        {% if responsable_id == m.id %}
+                        Retirer
+                        {% else %}
+                        Designer responsable
+                        {% endif %}
+                    </button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<hr style="margin: 3rem 0; border: none; border-top: 2px dashed #e74c3c;">
+
+<h3 style="color: #e74c3c;">⚠ Zone de test</h3>
+<p style="margin-bottom: 1rem;">Supprime toutes les donnees operationnelles (pointages, heures CAF, declarations de recuperation) sans toucher aux membres, taux horaires et parametres.</p>
+
+<form method="post" action="/admin/reset-donnees" onsubmit="return confirm('Confirmer la suppression de toutes les donnees de test ? Les membres et les taux horaires seront conserves.')">
+    <button type="submit" class="bouton-danger" style="background:#e74c3c;color:#fff;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;font-size:0.95rem;">
+        🗑 Reinitialiser les donnees de test
+    </button>
+</form>
+
+{% endblock %}
