@@ -175,7 +175,7 @@ def enregistrer_heure(
         # Vérifier que le membre existe dans la base heures
         session_membres = next(obtenir_session())
         try:
-            membre = session_membres.get(Membre, membre_id)
+            membre = session_membres.query(Membre).filter(Membre.id == membre_id).first()
             if not membre:
                 return _rediriger("/bilan/heures", erreur="Membre introuvable.")
         finally:
@@ -203,7 +203,7 @@ def enregistrer_heure(
 def supprimer_une_heure(heure_id: int):
     session = _session()
     try:
-        heure = session.get(HeureActivite, heure_id)
+        heure = session.query(HeureActivite).filter(HeureActivite.id == heure_id).first()
         annee = heure.date.year if heure else date.today().year
         mois = heure.date.month if heure else date.today().month
 
@@ -258,7 +258,7 @@ def afficher_membres(
 def basculer_membre(membre_id: int):
     session_membres = next(obtenir_session())
     try:
-        membre = session_membres.get(Membre, membre_id)
+        membre = session_membres.query(Membre).filter(Membre.id == membre_id).first()
         if not membre:
             return _rediriger("/bilan/membres", erreur="Membre introuvable.")
 

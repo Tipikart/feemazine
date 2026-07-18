@@ -424,7 +424,7 @@ def voter_recup(
     session: Session = Depends(obtenir_session),
     membre: Membre = Depends(membre_connecte),
 ):
-    demande = session.get(DemandeRecup, demande_id)
+    demande = session.query(DemandeRecup).filter(DemandeRecup.id == demande_id).first()
     if demande is None:
         return RedirectResponse(url="/heures/recuperation?" + _msg(erreur="Demande introuvable."), status_code=303)
 
@@ -550,7 +550,7 @@ def fiche_membre(
     session: Session = Depends(obtenir_session),
     membre: Membre = Depends(membre_connecte),
 ):
-    membre_cible = session.get(Membre, membre_id)
+    membre_cible = session.query(Membre).filter(Membre.id == membre_id).first()
     if membre_cible is None:
         return RedirectResponse(url="/heures/equipe", status_code=303)
 
@@ -652,7 +652,7 @@ def desactiver_membre(
         url = "/heures/admin?" + _msg(erreur="Vous ne pouvez pas désactiver votre propre compte.")
         return RedirectResponse(url=url, status_code=303)
 
-    cible = session.get(Membre, membre_id)
+    cible = session.query(Membre).filter(Membre.id == membre_id).first()
     if cible is not None:
         cible.actif = False
         session.commit()
@@ -665,7 +665,7 @@ def reactiver_membre(
     session: Session = Depends(obtenir_session),
     membre: Membre = Depends(membre_admin),
 ):
-    cible = session.get(Membre, membre_id)
+    cible = session.query(Membre).filter(Membre.id == membre_id).first()
     if cible is not None:
         cible.actif = True
         session.commit()

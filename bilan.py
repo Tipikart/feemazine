@@ -65,7 +65,7 @@ def ajouter_heure(
 
 
 def supprimer_heure(session: Session, heure_id: int) -> bool:
-    heure = session.get(HeureActivite, heure_id)
+    heure = session.query(HeureActivite).filter(HeureActivite.id == heure_id).first()
     if not heure:
         return False
     session.delete(heure)

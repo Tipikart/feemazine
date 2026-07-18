@@ -109,7 +109,7 @@ def initialiser_bd_cartes() -> None:
     Base.metadata.create_all(_moteur)
     session = SessionCarte()
     try:
-        if session.get(ParametreCarte, 1) is None:
+        if session.query(ParametreCarte).filter(ParametreCarte.id == 1).first() is None:
             session.add(ParametreCarte(id=1, duree_purge_cartes_mois=12))
             session.commit()
     finally:

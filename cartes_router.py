@@ -83,7 +83,7 @@ def afficher_gestion(
     confirmation: str | None = None,
     session: Session = Depends(obtenir_session_carte),
 ):
-    parametres = session.get(ParametreCarte, 1)
+    parametres = session.query(ParametreCarte).filter(ParametreCarte.id == 1).first()
     nb_actives = session.query(Carte).filter(Carte.actif.is_(True)).count()
     nb_inactives = session.query(Carte).filter(Carte.actif.is_(False)).count()
 
@@ -255,7 +255,7 @@ def enregistrer_parametres(
             url="/cartes/?" + _msg(erreur="La duree de purge doit etre au moins 1 mois."),
             status_code=303,
         )
-    parametres = session.get(ParametreCarte, 1)
+    parametres = session.query(ParametreCarte).filter(ParametreCarte.id == 1).first()
     parametres.duree_purge_cartes_mois = duree_purge
     session.commit()
     return RedirectResponse(

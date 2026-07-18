@@ -36,7 +36,7 @@ def creer_carte(
 ) -> Carte:
     for _ in range(10):
         code = generer_code_carte()
-        if session.get(Carte, code) is None:
+        if session.query(Carte).filter(Carte.id == code).first() is None:
             break
     else:
         raise RuntimeError("Impossible de generer un code unique.")
@@ -64,7 +64,7 @@ def creer_carte(
 
 
 def chercher_carte(session: Session, code: str) -> Carte | None:
-    return session.get(Carte, code.upper().strip())
+    return session.query(Carte).filter(Carte.id == code.upper().strip()).first()
 
 
 def modifier_carte(
@@ -120,7 +120,7 @@ def purger_cartes_inactives(session: Session) -> int:
     supprimes : ils ne contiennent que des compteurs historiques, pas
     de lien exploitable vers une identite une fois la carte purgee.
     """
-    parametres = session.get(ParametreCarte, 1)
+    parametres = session.query(ParametreCarte).filter(ParametreCarte.id == 1).first()
     date_limite = date_il_y_a_mois(parametres.duree_purge_cartes_mois)
 
     passages = lire_tous_les_passages()
@@ -194,7 +194,7 @@ def statistiques_cartes(
     parents_differents = 0
     tranches: dict[str, int] = {}
     for carte_id in cartes_ids_periode:
-        carte = session.get(Carte, carte_id)
+        carte = session.query(Carte).filter(Carte.id == carte_id).first()
         if carte:
             parents_differents += carte.nb_adultes
             for enfant in carte.enfants:

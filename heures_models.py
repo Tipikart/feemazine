@@ -177,7 +177,7 @@ def initialiser_bd() -> None:
     Base.metadata.create_all(moteur)
     session = SessionLocale()
     try:
-        if session.get(Parametre, 1) is None:
+        if session.query(Parametre).filter(Parametre.id == 1).first() is None:
             session.add(Parametre(id=1, seuil_validation_recup=2, seuil_refus_recup=2))
             session.commit()
     finally:
@@ -254,7 +254,7 @@ def migrer_parametres_recup() -> None:
     # Si l'ancien seuil existait mais que les nouveaux n'ont pas été initialisés, on les amorce
     session = SessionLocale()
     try:
-        p = session.get(Parametre, 1)
+        p = session.query(Parametre).filter(Parametre.id == 1).first()
         if p and p.seuil_validation_recup is None:
             p.seuil_validation_recup = 2
         if p and p.seuil_refus_recup is None:

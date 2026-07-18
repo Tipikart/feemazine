@@ -46,13 +46,13 @@ def consommer_jeton(session: Session, jeton: str) -> Membre | None:
         return None
     entree.utilise_le = datetime.now()
     session.commit()
-    return session.get(Membre, entree.membre_id)
+    return session.query(Membre).filter(Membre.id == entree.membre_id).first()
 
 
 def membre_connecte(request: Request, session: Session = Depends(obtenir_session)) -> Membre:
     """Dépendance FastAPI : membre actuellement connecté, ou lève NonAuthentifie."""
     membre_id = request.session.get("membre_id")
-    membre = session.get(Membre, membre_id) if membre_id else None
+    membre = session.query(Membre).filter(Membre.id == membre_id).first() if membre_id else None
     if membre is None or not membre.actif:
         raise NonAuthentifie()
     return membre

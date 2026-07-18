@@ -212,7 +212,7 @@ async def declarer_journee(request: Request):
     membre_id = request.state.membre_id
     session_membres = next(obtenir_session())
     try:
-        membre = session_membres.get(Membre, membre_id)
+        membre = session_membres.query(Membre).filter(Membre.id == membre_id).first()
         if not membre:
             return _rediriger_avec_message("/", erreur="Membre introuvable.")
     finally:
