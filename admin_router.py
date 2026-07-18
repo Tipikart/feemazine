@@ -120,7 +120,7 @@ def designer_responsable(request: Request, membre_id: int):
         if not _verifier_admin(request, session):
             return RedirectResponse(url="/login", status_code=303)
 
-        membre = session.get(Membre, membre_id)
+        membre = session.query(Membre).filter(Membre.id == membre_id).first()
         if not membre:
             return RedirectResponse(
                 url="/admin/utilisateurs",
